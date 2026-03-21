@@ -2,10 +2,13 @@
 
 namespace App\Filament\Resources\Finance\CashReceipts\Schemas;
 
+use App\Models\Finance\CustomerLedgerEntry;
 use App\Models\Finance\PaymentMethod;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 
@@ -25,7 +28,27 @@ class CashReceiptForm
                     ->relationship('customer', 'name')
                     ->searchable()
                     ->preload()
-                    ->required(),
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(function (?int $state, Set $set): void {
+                        $set('allocations', []);
+
+                        if ($state) {
+                            $invoices = CustomerLedgerEntry::where('customer_id', $state)
+                                ->where('document_type', 'invoice')
+                                ->where('is_open', true)
+                                ->orderBy('due_date')
+                                ->get();
+
+                            $set('allocations', $invoices->map(fn ($inv) => [
+                                'customer_ledger_entry_id' => $inv->id,
+                                'document_no' => $inv->document_no,
+                                'due_date' => $inv->due_date?->format('Y-m-d'),
+                                'remaining_amount' => number_format((float) $inv->remaining_amount, 2),
+                                'amount_applied' => null,
+                            ])->toArray());
+                        }
+                    }),
                 Select::make('payment_method_id')
                     ->label('Payment Method')
                     ->options(PaymentMethod::query()->pluck('description', 'id'))
@@ -50,9 +73,50 @@ class CashReceiptForm
                     ->default(now())
                     ->required(),
                 TextInput::make('amount')
+                    ->label('Total Amount Received')
                     ->numeric()
                     ->minValue(0)
                     ->required(),
+                Repeater::make('allocations')
+                    ->label('Invoice Allocations')
+                    ->schema([
+                        TextInput::make('document_no')
+                            ->label('Invoice No')
+                            ->disabled()
+                            ->dehydrated(false),
+                        TextInput::make('due_date')
+                            ->label('Due Date')
+                            ->disabled()
+                            ->dehydrated(false),
+                        TextInput::make('remaining_amount')
+                            ->label('Outstanding Balance')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->prefix('KES'),
+                        TextInput::make('amount_applied')
+                            ->label('Amount to Apply')
+                            ->numeric()
+                            ->minValue(0)
+                            ->live()
+                            ->rules([
+                                fn (Get $get): \Closure => function (string $attribute, mixed $value, \Closure $fail) use ($get): void {
+                                    $remaining = (float) str_replace(',', '', $get('remaining_amount') ?? '0');
+                                    if ((float) $value > $remaining) {
+                                        $fail("Cannot apply more than the outstanding balance of {$remaining}.");
+                                    }
+                                },
+                            ]),
+                        TextInput::make('customer_ledger_entry_id')
+                            ->hidden()
+                            ->dehydrated(),
+                    ])
+                    ->columns(4)
+                    ->columnSpanFull()
+                    ->addable(false)
+                    ->deletable(false)
+                    ->reorderable(false)
+                    ->hidden(fn (Get $get): bool => empty($get('customer_id')))
+                    ->dehydrated(false),
             ]);
     }
 }

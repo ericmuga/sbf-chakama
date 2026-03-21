@@ -27,7 +27,10 @@ class EditCashReceipt extends EditRecord
                 ->hidden(fn (CashReceipt $record): bool => strtolower($record->status) === 'posted')
                 ->action(function (CashReceipt $record): void {
                     try {
-                        app(ReceiptPostingService::class)->post($record->load(['bankAccount.bankPostingGroup', 'customer.customerPostingGroup']));
+                        app(ReceiptPostingService::class)->post(
+                            $record->load(['bankAccount.bankPostingGroup', 'customer.customerPostingGroup']),
+                            []
+                        );
                         Notification::make()->title('Receipt posted successfully')->success()->send();
                         $this->refreshFormData(['status', 'no']);
                     } catch (\RuntimeException $e) {

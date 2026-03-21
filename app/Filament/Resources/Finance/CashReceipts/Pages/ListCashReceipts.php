@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Finance\CashReceipts\Pages;
 
 use App\Filament\Resources\Finance\CashReceipts\CashReceiptResource;
-use Filament\Actions\CreateAction;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
 
 class ListCashReceipts extends ListRecords
@@ -13,7 +13,10 @@ class ListCashReceipts extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            Action::make('newReceipt')
+                ->label('Post New Receipt')
+                ->icon('heroicon-o-plus')
+                ->url($this->getResource()::getUrl('create')),
         ];
     }
 }
