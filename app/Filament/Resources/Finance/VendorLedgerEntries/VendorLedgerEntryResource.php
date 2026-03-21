@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Finance\VendorLedgerEntries;
 
+use App\Filament\Resources\Finance\VendorLedgerEntries\Pages\EditVendorLedgerEntry;
 use App\Filament\Resources\Finance\VendorLedgerEntries\Pages\ListVendorLedgerEntries;
 use App\Filament\Resources\Finance\VendorLedgerEntries\Schemas\VendorLedgerEntryForm;
 use App\Filament\Resources\Finance\VendorLedgerEntries\Tables\VendorLedgerEntriesTable;
@@ -38,7 +39,7 @@ class VendorLedgerEntryResource extends Resource
 
     public static function canEdit(Model $record): bool
     {
-        return false;
+        return (auth()->user()?->isAdmin() ?? false) && $record->is_open;
     }
 
     public static function canDelete(Model $record): bool
@@ -60,6 +61,7 @@ class VendorLedgerEntryResource extends Resource
     {
         return [
             'index' => ListVendorLedgerEntries::route('/'),
+            'edit' => EditVendorLedgerEntry::route('/{record}/edit'),
         ];
     }
 }

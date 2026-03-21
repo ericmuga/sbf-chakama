@@ -24,6 +24,10 @@ class PurchaseHeaderResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Finance';
 
+    protected static ?string $modelLabel = 'Purchase Document';
+
+    protected static ?string $pluralModelLabel = 'Purchase Documents';
+
     protected static ?string $navigationLabel = 'Purchases';
 
     protected static ?int $navigationSort = 40;

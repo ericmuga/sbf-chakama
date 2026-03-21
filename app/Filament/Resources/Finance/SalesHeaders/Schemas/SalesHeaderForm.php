@@ -67,7 +67,7 @@ class SalesHeaderForm
                     ->schema([
                         Select::make('service_id')
                             ->label('Service')
-                            ->options(fn () => Service::all()->pluck('description', 'id'))
+                            ->options(fn () => Service::where('is_sellable', true)->pluck('description', 'id'))
                             ->searchable()
                             ->required()
                             ->live()

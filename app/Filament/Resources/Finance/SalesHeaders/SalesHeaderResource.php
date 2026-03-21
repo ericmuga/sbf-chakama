@@ -24,6 +24,10 @@ class SalesHeaderResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Finance';
 
+    protected static ?string $modelLabel = 'Sales Document';
+
+    protected static ?string $pluralModelLabel = 'Sales Documents';
+
     protected static ?string $navigationLabel = 'Sales';
 
     protected static ?int $navigationSort = 30;

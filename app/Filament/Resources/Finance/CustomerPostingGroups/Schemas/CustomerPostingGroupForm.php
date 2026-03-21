@@ -20,6 +20,7 @@ class CustomerPostingGroupForm
                     ->maxLength(255),
                 TextInput::make('receivables_account_no')
                     ->label('Receivables Account No')
+                    ->required()
                     ->maxLength(20),
                 TextInput::make('service_charge_account_no')
                     ->label('Service Charge Account No')

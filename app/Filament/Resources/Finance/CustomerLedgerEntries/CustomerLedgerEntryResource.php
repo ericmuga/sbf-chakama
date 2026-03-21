@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Finance\CustomerLedgerEntries;
 
+use App\Filament\Resources\Finance\CustomerLedgerEntries\Pages\EditCustomerLedgerEntry;
 use App\Filament\Resources\Finance\CustomerLedgerEntries\Pages\ListCustomerLedgerEntries;
 use App\Filament\Resources\Finance\CustomerLedgerEntries\Schemas\CustomerLedgerEntryForm;
 use App\Filament\Resources\Finance\CustomerLedgerEntries\Tables\CustomerLedgerEntriesTable;
@@ -38,7 +39,7 @@ class CustomerLedgerEntryResource extends Resource
 
     public static function canEdit(Model $record): bool
     {
-        return false;
+        return (auth()->user()?->isAdmin() ?? false) && $record->is_open;
     }
 
     public static function canDelete(Model $record): bool
@@ -60,6 +61,7 @@ class CustomerLedgerEntryResource extends Resource
     {
         return [
             'index' => ListCustomerLedgerEntries::route('/'),
+            'edit' => EditCustomerLedgerEntry::route('/{record}/edit'),
         ];
     }
 }

@@ -26,6 +26,7 @@ class GeneralPostingSetupForm
                     ->required(),
                 TextInput::make('sales_account_no')
                     ->label('Sales Account No')
+                    ->required()
                     ->maxLength(20),
             ]);
     }

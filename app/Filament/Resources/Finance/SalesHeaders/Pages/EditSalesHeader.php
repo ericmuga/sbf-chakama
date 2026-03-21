@@ -29,7 +29,7 @@ class EditSalesHeader extends EditRecord
                     try {
                         app(SalesPostingService::class)->post($record);
                         Notification::make()->title('Posted successfully')->success()->send();
-                        $this->refreshFormData(['status', 'no']);
+                        $this->redirect(SalesHeaderResource::getUrl('index'));
                     } catch (\RuntimeException $e) {
                         Notification::make()->title($e->getMessage())->danger()->send();
                     }

@@ -18,6 +18,7 @@ class ServicePostingGroupFactory extends Factory
             'code' => fake()->unique()->lexify('SRV-???'),
             'description' => fake()->sentence(3),
             'revenue_account_no' => fake()->numerify('40##'),
+            'expense_account_no' => fake()->numerify('50##'),
         ];
     }
 }

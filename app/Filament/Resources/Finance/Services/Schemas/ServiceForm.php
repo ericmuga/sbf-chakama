@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Finance\Services\Schemas;
 use App\Models\Finance\ServicePostingGroup;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 
 class ServiceForm
@@ -29,6 +30,12 @@ class ServiceForm
                     ->options(ServicePostingGroup::query()->pluck('description', 'id'))
                     ->searchable()
                     ->required(),
+                Toggle::make('is_sellable')
+                    ->label('Sellable')
+                    ->default(true),
+                Toggle::make('is_purchasable')
+                    ->label('Purchasable')
+                    ->default(false),
             ]);
     }
 }

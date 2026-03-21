@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['invoice_nos', 'posted_invoice_nos', 'vendor_nos'])]
+#[Fillable(['invoice_nos', 'posted_invoice_nos', 'vendor_nos', 'payment_nos'])]
 class PurchaseSetup extends Model
 {
     protected $table = 'purchase_setups';
@@ -29,5 +29,10 @@ class PurchaseSetup extends Model
     public function vendorNumberSeries(): BelongsTo
     {
         return $this->belongsTo(NumberSeries::class, 'vendor_nos', 'code');
+    }
+
+    public function paymentNumberSeries(): BelongsTo
+    {
+        return $this->belongsTo(NumberSeries::class, 'payment_nos', 'code');
     }
 }

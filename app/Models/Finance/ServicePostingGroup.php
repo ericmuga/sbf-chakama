@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['code', 'description', 'revenue_account_no'])]
+#[Fillable(['code', 'description', 'revenue_account_no', 'expense_account_no'])]
 class ServicePostingGroup extends Model
 {
     use HasFactory;

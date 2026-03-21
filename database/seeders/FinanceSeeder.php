@@ -68,6 +68,8 @@ class FinanceSeeder extends Seeder
             'is_manual_allowed' => false, 'prevent_repeats' => true, 'is_active' => true,
         ]);
 
+        // ─── Customer Posting Groups ──────────────────────────────────────────
+
         $memberCpg = CustomerPostingGroup::firstOrCreate(['code' => 'MEMBER'], [
             'description' => 'Member Customers', 'receivables_account_no' => '1100', 'service_charge_account_no' => null,
         ]);
@@ -79,6 +81,8 @@ class FinanceSeeder extends Seeder
         $foreign = CustomerPostingGroup::firstOrCreate(['code' => 'FOREIGN'], [
             'description' => 'Foreign Customers', 'receivables_account_no' => '1110', 'service_charge_account_no' => null,
         ]);
+
+        // ─── Vendor Posting Groups ────────────────────────────────────────────
 
         VendorPostingGroup::firstOrCreate(['code' => 'MEMBER'], [
             'description' => 'Member Vendors', 'payables_account_no' => '2100',
@@ -92,17 +96,45 @@ class FinanceSeeder extends Seeder
             'description' => 'Import Vendors', 'payables_account_no' => '2110',
         ]);
 
+        // ─── Service Posting Groups ───────────────────────────────────────────
+
         $memberServices = ServicePostingGroup::firstOrCreate(['code' => 'MEMBER-SERVICES'], [
-            'description' => 'Member Services', 'revenue_account_no' => '4000',
+            'description' => 'Member Services',
+            'revenue_account_no' => '4000',
+            'expense_account_no' => null,
         ]);
 
         $admin = ServicePostingGroup::firstOrCreate(['code' => 'ADMIN'], [
-            'description' => 'Administrative Services', 'revenue_account_no' => '4100',
+            'description' => 'Administrative Services',
+            'revenue_account_no' => '4100',
+            'expense_account_no' => '5100',
         ]);
 
         ServicePostingGroup::firstOrCreate(['code' => 'FINANCE'], [
-            'description' => 'Finance Services', 'revenue_account_no' => '4200',
+            'description' => 'Finance Services',
+            'revenue_account_no' => '4200',
+            'expense_account_no' => null,
         ]);
+
+        $claims = ServicePostingGroup::firstOrCreate(['code' => 'CLAIMS'], [
+            'description' => 'Welfare Claims',
+            'revenue_account_no' => null,
+            'expense_account_no' => '5200',
+        ]);
+
+        $projects = ServicePostingGroup::firstOrCreate(['code' => 'PROJECTS'], [
+            'description' => 'Community Projects',
+            'revenue_account_no' => null,
+            'expense_account_no' => '5300',
+        ]);
+
+        $operations = ServicePostingGroup::firstOrCreate(['code' => 'OPERATIONS'], [
+            'description' => 'Operations & Overheads',
+            'revenue_account_no' => null,
+            'expense_account_no' => '5400',
+        ]);
+
+        // ─── Bank Posting Groups ──────────────────────────────────────────────
 
         $mainBankPg = BankPostingGroup::firstOrCreate(['code' => 'MAIN-BANK'], [
             'description' => 'Main Bank Account', 'bank_account_gl_no' => '1050',
@@ -116,13 +148,14 @@ class FinanceSeeder extends Seeder
             'description' => 'Cash on Hand', 'bank_account_gl_no' => '1010',
         ]);
 
-        // Bank Accounts
+        // ─── Bank Accounts ────────────────────────────────────────────────────
+
         $kcbAccount = BankAccount::firstOrCreate(['code' => 'KCB-MAIN'], [
             'name' => 'KCB Main Account', 'bank_account_no' => '1234567890',
             'bank_posting_group_id' => $mainBankPg->id, 'currency_code' => 'KES',
         ]);
 
-        $equityAccount = BankAccount::firstOrCreate(['code' => 'EQUITY-OPS'], [
+        BankAccount::firstOrCreate(['code' => 'EQUITY-OPS'], [
             'name' => 'Equity Operations Account', 'bank_account_no' => '0987654321',
             'bank_posting_group_id' => $mainBankPg->id, 'currency_code' => 'KES',
         ]);
@@ -142,7 +175,8 @@ class FinanceSeeder extends Seeder
             'bank_posting_group_id' => $mainBankPg->id, 'currency_code' => 'KES',
         ]);
 
-        // Payment Methods
+        // ─── Payment Methods ──────────────────────────────────────────────────
+
         PaymentMethod::firstOrCreate(['code' => 'CASH'], [
             'description' => 'Cash', 'bank_account_id' => $cashAccount->id,
         ]);
@@ -163,6 +197,8 @@ class FinanceSeeder extends Seeder
             'description' => 'Credit (Internal)', 'bank_account_id' => null,
         ]);
 
+        // ─── General Posting Setups (Sales) ───────────────────────────────────
+
         GeneralPostingSetup::firstOrCreate([
             'customer_posting_group_id' => $memberCpg->id,
             'service_posting_group_id' => $memberServices->id,
@@ -178,10 +214,15 @@ class FinanceSeeder extends Seeder
             'service_posting_group_id' => $admin->id,
         ], ['sales_account_no' => '4100']);
 
+        // ─── Payment Terms ────────────────────────────────────────────────────
+
         PaymentTerms::firstOrCreate(['code' => 'COD'], ['description' => 'Cash on Delivery', 'due_days' => 0]);
         PaymentTerms::firstOrCreate(['code' => 'NET30'], ['description' => 'Net 30 Days', 'due_days' => 30]);
         PaymentTerms::firstOrCreate(['code' => 'NET60'], ['description' => 'Net 60 Days', 'due_days' => 60]);
 
+        // ─── G/L Accounts ─────────────────────────────────────────────────────
+
+        // Assets
         GlAccount::firstOrCreate(['no' => '1010'], ['name' => 'Cash on Hand', 'account_type' => 'Posting']);
         GlAccount::firstOrCreate(['no' => '1050'], ['name' => 'KCB Bank Account', 'account_type' => 'Posting']);
         GlAccount::firstOrCreate(['no' => '1051'], ['name' => 'Equity Bank Account', 'account_type' => 'Posting']);
@@ -189,11 +230,31 @@ class FinanceSeeder extends Seeder
         GlAccount::firstOrCreate(['no' => '1060'], ['name' => 'POS / Card Account', 'account_type' => 'Posting']);
         GlAccount::firstOrCreate(['no' => '1100'], ['name' => 'Accounts Receivable', 'account_type' => 'Posting']);
         GlAccount::firstOrCreate(['no' => '1110'], ['name' => 'Accounts Receivable (Foreign)', 'account_type' => 'Posting']);
+
+        // Liabilities
         GlAccount::firstOrCreate(['no' => '2100'], ['name' => 'Accounts Payable', 'account_type' => 'Posting']);
         GlAccount::firstOrCreate(['no' => '2110'], ['name' => 'Accounts Payable (Import)', 'account_type' => 'Posting']);
+
+        // Revenue
         GlAccount::firstOrCreate(['no' => '4000'], ['name' => 'Member Services Revenue', 'account_type' => 'Posting']);
         GlAccount::firstOrCreate(['no' => '4100'], ['name' => 'Administrative Revenue', 'account_type' => 'Posting']);
         GlAccount::firstOrCreate(['no' => '4200'], ['name' => 'Finance Services Revenue', 'account_type' => 'Posting']);
+
+        // Expenses
+        GlAccount::firstOrCreate(['no' => '5100'], ['name' => 'Administrative Expenses', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '5200'], ['name' => 'Welfare Claims Expense', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '5210'], ['name' => 'Medical Claims Expense', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '5220'], ['name' => 'Funeral & Bereavement Claims', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '5230'], ['name' => 'Emergency Relief Claims', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '5300'], ['name' => 'Community Projects Expense', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '5310'], ['name' => 'Infrastructure & Construction', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '5320'], ['name' => 'Education Projects Expense', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '5400'], ['name' => 'Operations & Overheads', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '5410'], ['name' => 'Office & Supplies Expense', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '5420'], ['name' => 'Transport & Travel Expense', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '5430'], ['name' => 'Utilities Expense', 'account_type' => 'Posting']);
+
+        // ─── Customers ────────────────────────────────────────────────────────
 
         Customer::firstOrCreate(['no' => 'CUST-001'], [
             'name' => 'Chakama Community Fund',
@@ -207,6 +268,8 @@ class FinanceSeeder extends Seeder
             'payment_terms_code' => 'NET60',
         ]);
 
+        // ─── Vendors ──────────────────────────────────────────────────────────
+
         Vendor::firstOrCreate(['no' => 'VEND-001'], [
             'name' => 'Nairobi Office Supplies Ltd',
             'vendor_posting_group_id' => $importVpg->id,
@@ -219,23 +282,109 @@ class FinanceSeeder extends Seeder
             'payment_terms_code' => 'COD',
         ]);
 
+        // ─── Services ─────────────────────────────────────────────────────────
+
+        // Sellable (income-generating)
         Service::firstOrCreate(['code' => 'MEM-REG'], [
             'description' => 'Member Registration Fee',
             'unit_price' => 500.0000,
             'service_posting_group_id' => $memberServices->id,
+            'is_sellable' => true,
+            'is_purchasable' => false,
         ]);
 
         Service::firstOrCreate(['code' => 'MEM-ANNUAL'], [
             'description' => 'Annual Membership Subscription',
             'unit_price' => 2400.0000,
             'service_posting_group_id' => $memberServices->id,
+            'is_sellable' => true,
+            'is_purchasable' => false,
         ]);
 
         Service::firstOrCreate(['code' => 'ADMIN-FEE'], [
             'description' => 'Administrative Processing Fee',
             'unit_price' => 200.0000,
             'service_posting_group_id' => $admin->id,
+            'is_sellable' => true,
+            'is_purchasable' => false,
         ]);
+
+        // Purchasable welfare claims
+        Service::firstOrCreate(['code' => 'CLM-MEDICAL'], [
+            'description' => 'Medical Claim Payout',
+            'unit_price' => 0.0000,
+            'service_posting_group_id' => $claims->id,
+            'is_sellable' => false,
+            'is_purchasable' => true,
+        ]);
+
+        Service::firstOrCreate(['code' => 'CLM-FUNERAL'], [
+            'description' => 'Funeral & Bereavement Claim',
+            'unit_price' => 0.0000,
+            'service_posting_group_id' => $claims->id,
+            'is_sellable' => false,
+            'is_purchasable' => true,
+        ]);
+
+        Service::firstOrCreate(['code' => 'CLM-EMERGENCY'], [
+            'description' => 'Emergency Relief Claim',
+            'unit_price' => 0.0000,
+            'service_posting_group_id' => $claims->id,
+            'is_sellable' => false,
+            'is_purchasable' => true,
+        ]);
+
+        // Community projects
+        Service::firstOrCreate(['code' => 'PROJ-INFRA'], [
+            'description' => 'Infrastructure & Construction Project',
+            'unit_price' => 0.0000,
+            'service_posting_group_id' => $projects->id,
+            'is_sellable' => false,
+            'is_purchasable' => true,
+        ]);
+
+        Service::firstOrCreate(['code' => 'PROJ-EDUCATION'], [
+            'description' => 'Education Support Project',
+            'unit_price' => 0.0000,
+            'service_posting_group_id' => $projects->id,
+            'is_sellable' => false,
+            'is_purchasable' => true,
+        ]);
+
+        // Operational expenses
+        Service::firstOrCreate(['code' => 'OPS-OFFICE'], [
+            'description' => 'Office Supplies & Stationery',
+            'unit_price' => 0.0000,
+            'service_posting_group_id' => $operations->id,
+            'is_sellable' => false,
+            'is_purchasable' => true,
+        ]);
+
+        Service::firstOrCreate(['code' => 'OPS-TRANSPORT'], [
+            'description' => 'Transport & Travel',
+            'unit_price' => 0.0000,
+            'service_posting_group_id' => $operations->id,
+            'is_sellable' => false,
+            'is_purchasable' => true,
+        ]);
+
+        Service::firstOrCreate(['code' => 'OPS-UTILITIES'], [
+            'description' => 'Utilities (Electricity, Water)',
+            'unit_price' => 0.0000,
+            'service_posting_group_id' => $operations->id,
+            'is_sellable' => false,
+            'is_purchasable' => true,
+        ]);
+
+        Service::firstOrCreate(['code' => 'OPS-ADMIN'], [
+            'description' => 'General Administrative Expenses',
+            'unit_price' => 0.0000,
+            'service_posting_group_id' => $admin->id,
+            'is_sellable' => false,
+            'is_purchasable' => true,
+        ]);
+
+        // ─── Setup ────────────────────────────────────────────────────────────
 
         $salesSetup = SalesSetup::first();
         if ($salesSetup) {
