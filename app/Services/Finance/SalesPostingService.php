@@ -29,8 +29,11 @@ class SalesPostingService
         $totalAmount = $lines->sum('line_amount');
 
         DB::transaction(function () use ($header, $lines, $totalAmount): void {
+            $nextEntryNo = (CustomerLedgerEntry::lockForUpdate()->max('entry_no') ?? 0) + 1;
+
             // Customer ledger entry
             CustomerLedgerEntry::create([
+                'entry_no' => $nextEntryNo,
                 'customer_id' => $header->customer_id,
                 'document_type' => $header->document_type ?? 'invoice',
                 'document_no' => $header->no,
