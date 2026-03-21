@@ -31,7 +31,7 @@ class MemberCardTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee($member->no);
-        $response->assertSee($member->national_id);
+        $response->assertSee($member->identity_no);
         $response->assertSee($member->phone);
     }
 

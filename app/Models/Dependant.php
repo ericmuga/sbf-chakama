@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-#[Fillable(['member_id', 'name', 'national_id', 'phone', 'email', 'date_of_birth', 'relationship'])]
+#[Fillable(['member_id', 'name', 'identity_no', 'identity_type', 'phone', 'email', 'date_of_birth', 'relationship'])]
 class Dependant extends Model
 {
     use HasFactory;

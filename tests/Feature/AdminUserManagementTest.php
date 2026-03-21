@@ -81,7 +81,8 @@ class AdminUserManagementTest extends TestCase
                 'is_admin' => false,
                 'member' => [
                     'no' => 'MEM-001',
-                    'national_id' => '12345678',
+                    'identity_type' => 'national_id',
+                    'identity_no' => '12345678',
                     'phone' => '0712345678',
                     'member_status' => 'active',
                     'is_chakama' => true,
@@ -103,7 +104,8 @@ class AdminUserManagementTest extends TestCase
         $this->assertDatabaseHas(Member::class, [
             'user_id' => $user->id,
             'no' => 'MEM-001',
-            'national_id' => '12345678',
+            'identity_type' => 'national_id',
+            'identity_no' => '12345678',
             'phone' => '0712345678',
             'member_status' => 'active',
             'is_chakama' => true,
@@ -121,7 +123,8 @@ class AdminUserManagementTest extends TestCase
         Member::query()->create([
             'no' => 'MEM-SET-001',
             'user_id' => $target->id,
-            'national_id' => '90000001',
+            'identity_type' => 'national_id',
+            'identity_no' => '90000001',
             'phone' => '0700000001',
             'member_status' => 'active',
             'is_chakama' => true,
@@ -140,7 +143,8 @@ class AdminUserManagementTest extends TestCase
                 'is_admin' => true,
                 'member' => [
                     'no' => 'MEM-SET-001',
-                    'national_id' => '90000001',
+                    'identity_type' => 'national_id',
+                    'identity_no' => '90000001',
                     'phone' => '0700000001',
                     'member_status' => 'active',
                     'is_chakama' => true,
@@ -163,7 +167,8 @@ class AdminUserManagementTest extends TestCase
         Member::query()->create([
             'no' => 'MEM-UNSET-001',
             'user_id' => $target->id,
-            'national_id' => '90000002',
+            'identity_type' => 'national_id',
+            'identity_no' => '90000002',
             'phone' => '0700000002',
             'member_status' => 'active',
             'is_chakama' => true,
@@ -182,7 +187,8 @@ class AdminUserManagementTest extends TestCase
                 'is_admin' => false,
                 'member' => [
                     'no' => 'MEM-UNSET-001',
-                    'national_id' => '90000002',
+                    'identity_type' => 'national_id',
+                    'identity_no' => '90000002',
                     'phone' => '0700000002',
                     'member_status' => 'active',
                     'is_chakama' => true,

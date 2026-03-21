@@ -8,6 +8,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
@@ -26,8 +27,19 @@ class DependantsRelationManager extends RelationManager
                     ->required()
                     ->maxLength(255)
                     ->columnSpanFull(),
-                TextInput::make('national_id')
-                    ->label('National ID')
+                Select::make('identity_type')
+                    ->label('Identity Type')
+                    ->options([
+                        'national_id' => 'National ID',
+                        'passport_no' => 'Passport No',
+                        'birth_cert_no' => 'Birth Certificate No',
+                        'driving_licence_no' => 'Driving Licence No',
+                        'pin_no' => 'PIN No',
+                    ])
+                    ->required(),
+                TextInput::make('identity_no')
+                    ->label('Identity Number')
+                    ->required()
                     ->maxLength(50),
                 TextInput::make('phone')
                     ->tel()

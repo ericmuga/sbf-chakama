@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-#[Fillable(['no', 'user_id', 'national_id', 'phone', 'member_status', 'is_chakama', 'is_sbf', 'customer_no', 'vendor_no', 'name', 'type', 'member_id', 'email', 'date_of_birth', 'relationship', 'contact_preference'])]
+#[Fillable(['no', 'user_id', 'identity_no', 'identity_type', 'phone', 'member_status', 'is_chakama', 'is_sbf', 'customer_no', 'vendor_no', 'name', 'type', 'member_id', 'email', 'date_of_birth', 'relationship', 'contact_preference'])]
 class Member extends Model
 {
     use HasFactory;
