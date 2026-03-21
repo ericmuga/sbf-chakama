@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Finance\CashReceipts\Schemas;
 use App\Models\Finance\CustomerLedgerEntry;
 use App\Models\Finance\PaymentMethod;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -106,17 +107,14 @@ class CashReceiptForm
                                     }
                                 },
                             ]),
-                        TextInput::make('customer_ledger_entry_id')
-                            ->hidden()
-                            ->dehydrated(),
+                        Hidden::make('customer_ledger_entry_id'),
                     ])
                     ->columns(4)
                     ->columnSpanFull()
                     ->addable(false)
                     ->deletable(false)
                     ->reorderable(false)
-                    ->hidden(fn (Get $get): bool => empty($get('customer_id')))
-                    ->dehydrated(false),
+                    ->hidden(fn (Get $get): bool => empty($get('customer_id'))),
             ]);
     }
 }
