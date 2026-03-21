@@ -6,6 +6,7 @@ use App\Filament\Resources\Members\Pages\CreateMember;
 use App\Filament\Resources\Members\Pages\EditMember;
 use App\Filament\Resources\Members\Pages\ListMembers;
 use App\Filament\Resources\Members\RelationManagers\DependantsRelationManager;
+use App\Filament\Resources\Members\RelationManagers\DocumentsRelationManager;
 use App\Filament\Resources\Members\RelationManagers\NextOfKinRelationManager;
 use App\Filament\Resources\Members\Schemas\MemberForm;
 use App\Filament\Resources\Members\Tables\MembersTable;
@@ -44,6 +45,7 @@ class MemberResource extends Resource
         return [
             DependantsRelationManager::class,
             NextOfKinRelationManager::class,
+            DocumentsRelationManager::class,
         ];
     }
 
