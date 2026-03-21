@@ -31,6 +31,11 @@ class SalesSetupForm
                     ->relationship('memberNumberSeries', 'code')
                     ->searchable()
                     ->preload(),
+                Select::make('receipt_nos')
+                    ->label('Receipt Number Series')
+                    ->relationship('receiptNumberSeries', 'code')
+                    ->searchable()
+                    ->preload(),
             ]);
     }
 }

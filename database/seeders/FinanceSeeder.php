@@ -2,12 +2,14 @@
 
 namespace Database\Seeders;
 
+use App\Models\Finance\BankAccount;
 use App\Models\Finance\BankPostingGroup;
 use App\Models\Finance\Customer;
 use App\Models\Finance\CustomerPostingGroup;
 use App\Models\Finance\GeneralPostingSetup;
 use App\Models\Finance\GlAccount;
 use App\Models\Finance\NumberSeries;
+use App\Models\Finance\PaymentMethod;
 use App\Models\Finance\PaymentTerms;
 use App\Models\Finance\PurchaseSetup;
 use App\Models\Finance\SalesSetup;
@@ -56,6 +58,11 @@ class FinanceSeeder extends Seeder
             'is_manual_allowed' => false, 'prevent_repeats' => true, 'is_active' => true,
         ]);
 
+        $rcptNos = NumberSeries::firstOrCreate(['code' => 'RCPT'], [
+            'description' => 'Cash Receipts', 'prefix' => 'RCPT-', 'last_no' => 0, 'length' => 6,
+            'is_manual_allowed' => false, 'prevent_repeats' => true, 'is_active' => true,
+        ]);
+
         $mbrNos = NumberSeries::firstOrCreate(['code' => 'MBR'], [
             'description' => 'Member Numbers', 'prefix' => 'MBR-', 'last_no' => 0, 'length' => 6,
             'is_manual_allowed' => false, 'prevent_repeats' => true, 'is_active' => true,
@@ -97,8 +104,63 @@ class FinanceSeeder extends Seeder
             'description' => 'Finance Services', 'revenue_account_no' => '4200',
         ]);
 
-        BankPostingGroup::firstOrCreate(['code' => 'MAIN-BANK'], [
+        $mainBankPg = BankPostingGroup::firstOrCreate(['code' => 'MAIN-BANK'], [
             'description' => 'Main Bank Account', 'bank_account_gl_no' => '1050',
+        ]);
+
+        $mpesaPg = BankPostingGroup::firstOrCreate(['code' => 'MPESA'], [
+            'description' => 'M-Pesa Mobile Money', 'bank_account_gl_no' => '1055',
+        ]);
+
+        $cashPg = BankPostingGroup::firstOrCreate(['code' => 'CASH'], [
+            'description' => 'Cash on Hand', 'bank_account_gl_no' => '1010',
+        ]);
+
+        // Bank Accounts
+        $kcbAccount = BankAccount::firstOrCreate(['code' => 'KCB-MAIN'], [
+            'name' => 'KCB Main Account', 'bank_account_no' => '1234567890',
+            'bank_posting_group_id' => $mainBankPg->id, 'currency_code' => 'KES',
+        ]);
+
+        $equityAccount = BankAccount::firstOrCreate(['code' => 'EQUITY-OPS'], [
+            'name' => 'Equity Operations Account', 'bank_account_no' => '0987654321',
+            'bank_posting_group_id' => $mainBankPg->id, 'currency_code' => 'KES',
+        ]);
+
+        $mpesaAccount = BankAccount::firstOrCreate(['code' => 'MPESA-PAYBILL'], [
+            'name' => 'M-Pesa Paybill', 'bank_account_no' => '400200',
+            'bank_posting_group_id' => $mpesaPg->id, 'currency_code' => 'KES',
+        ]);
+
+        $cashAccount = BankAccount::firstOrCreate(['code' => 'CASH-MAIN'], [
+            'name' => 'Main Cash Drawer', 'bank_account_no' => '',
+            'bank_posting_group_id' => $cashPg->id, 'currency_code' => 'KES',
+        ]);
+
+        $posAccount = BankAccount::firstOrCreate(['code' => 'POS-TERMINAL'], [
+            'name' => 'POS Card Terminal', 'bank_account_no' => 'POS-001',
+            'bank_posting_group_id' => $mainBankPg->id, 'currency_code' => 'KES',
+        ]);
+
+        // Payment Methods
+        PaymentMethod::firstOrCreate(['code' => 'CASH'], [
+            'description' => 'Cash', 'bank_account_id' => $cashAccount->id,
+        ]);
+
+        PaymentMethod::firstOrCreate(['code' => 'CHEQUE'], [
+            'description' => 'Cheque', 'bank_account_id' => $kcbAccount->id,
+        ]);
+
+        PaymentMethod::firstOrCreate(['code' => 'MPESA'], [
+            'description' => 'M-Pesa', 'bank_account_id' => $mpesaAccount->id,
+        ]);
+
+        PaymentMethod::firstOrCreate(['code' => 'CARD'], [
+            'description' => 'Card (Debit/Credit)', 'bank_account_id' => $posAccount->id,
+        ]);
+
+        PaymentMethod::firstOrCreate(['code' => 'CREDIT'], [
+            'description' => 'Credit (Internal)', 'bank_account_id' => null,
         ]);
 
         GeneralPostingSetup::firstOrCreate([
@@ -120,10 +182,18 @@ class FinanceSeeder extends Seeder
         PaymentTerms::firstOrCreate(['code' => 'NET30'], ['description' => 'Net 30 Days', 'due_days' => 30]);
         PaymentTerms::firstOrCreate(['code' => 'NET60'], ['description' => 'Net 60 Days', 'due_days' => 60]);
 
-        GlAccount::firstOrCreate(['no' => '1050'], ['name' => 'Bank Account', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '1010'], ['name' => 'Cash on Hand', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '1050'], ['name' => 'KCB Bank Account', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '1051'], ['name' => 'Equity Bank Account', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '1055'], ['name' => 'M-Pesa Account', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '1060'], ['name' => 'POS / Card Account', 'account_type' => 'Posting']);
         GlAccount::firstOrCreate(['no' => '1100'], ['name' => 'Accounts Receivable', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '1110'], ['name' => 'Accounts Receivable (Foreign)', 'account_type' => 'Posting']);
         GlAccount::firstOrCreate(['no' => '2100'], ['name' => 'Accounts Payable', 'account_type' => 'Posting']);
-        GlAccount::firstOrCreate(['no' => '4000'], ['name' => 'Sales Revenue', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '2110'], ['name' => 'Accounts Payable (Import)', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '4000'], ['name' => 'Member Services Revenue', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '4100'], ['name' => 'Administrative Revenue', 'account_type' => 'Posting']);
+        GlAccount::firstOrCreate(['no' => '4200'], ['name' => 'Finance Services Revenue', 'account_type' => 'Posting']);
 
         Customer::firstOrCreate(['no' => 'CUST-001'], [
             'name' => 'Chakama Community Fund',
@@ -174,6 +244,7 @@ class FinanceSeeder extends Seeder
                 'posted_invoice_nos' => $psinv->code,
                 'customer_nos' => $custNos->code,
                 'member_nos' => $mbrNos->code,
+                'receipt_nos' => $rcptNos->code,
             ]);
         } else {
             SalesSetup::create([
@@ -181,6 +252,7 @@ class FinanceSeeder extends Seeder
                 'posted_invoice_nos' => $psinv->code,
                 'customer_nos' => $custNos->code,
                 'member_nos' => $mbrNos->code,
+                'receipt_nos' => $rcptNos->code,
             ]);
         }
 
