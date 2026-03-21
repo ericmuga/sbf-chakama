@@ -16,14 +16,16 @@ class MemberImportTest extends TestCase
     private function writeCsv(string $filename, array $headers, array $rows): string
     {
         Storage::fake('local');
-        Storage::disk('local')->makeDirectory('imports');
         $path = "imports/{$filename}";
-        $handle = fopen(Storage::disk('local')->path($path), 'w');
-        fputcsv($handle, $headers);
+
+        $buffer = fopen('php://temp', 'r+');
+        fputcsv($buffer, $headers);
         foreach ($rows as $row) {
-            fputcsv($handle, $row);
+            fputcsv($buffer, $row);
         }
-        fclose($handle);
+        rewind($buffer);
+        Storage::disk('local')->put($path, stream_get_contents($buffer));
+        fclose($buffer);
 
         return $path;
     }
