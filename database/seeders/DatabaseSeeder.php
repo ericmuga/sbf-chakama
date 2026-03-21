@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -22,5 +21,7 @@ class DatabaseSeeder extends Seeder
                 'is_admin' => true,
             ]
         );
+
+        $this->call(FinanceSeeder::class);
     }
 }
