@@ -24,7 +24,7 @@ class SalesLineFactory extends Factory
 
         return [
             'sales_header_id' => SalesHeader::factory(),
-            'line_no' => fake()->numberBetween(1, 99) * 10000,
+            'line_no' => fake()->unique()->numberBetween(1, 9999) * 10,
             'service_id' => Service::factory(),
             'description' => fake()->sentence(4),
             'quantity' => $quantity,
