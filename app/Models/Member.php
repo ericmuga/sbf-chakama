@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-#[Fillable(['no', 'user_id', 'national_id', 'phone', 'member_status', 'is_chakama', 'is_sbf', 'customer_no', 'vendor_no'])]
+#[Fillable(['no', 'user_id', 'national_id', 'phone', 'member_status', 'is_chakama', 'is_sbf', 'customer_no', 'vendor_no', 'name', 'type', 'member_id', 'email', 'date_of_birth', 'relationship', 'contact_preference'])]
 class Member extends Model
 {
     use HasFactory;
@@ -23,7 +25,13 @@ class Member extends Model
         return [
             'is_chakama' => 'boolean',
             'is_sbf' => 'boolean',
+            'date_of_birth' => 'date',
         ];
+    }
+
+    public function scopeMembers(Builder $query): Builder
+    {
+        return $query->where('type', 'member');
     }
 
     public function user(): BelongsTo
@@ -54,5 +62,20 @@ class Member extends Model
     public function notifications(): HasMany
     {
         return $this->hasMany(Notification::class, 'member_no', 'no');
+    }
+
+    public function dependants(): HasMany
+    {
+        return $this->hasMany(Dependant::class, 'member_id');
+    }
+
+    public function nextOfKin(): HasMany
+    {
+        return $this->hasMany(NextOfKin::class, 'member_id');
+    }
+
+    public function documents(): MorphMany
+    {
+        return $this->morphMany(Document::class, 'documentable');
     }
 }

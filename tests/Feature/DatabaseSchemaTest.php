@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\DetailedLedgerEntry;
+use App\Models\Document;
 use App\Models\Member;
 use App\Models\MemberLedgerEntry;
 use App\Models\NoSeries;
@@ -30,7 +31,8 @@ class DatabaseSchemaTest extends TestCase
     {
         $tables = [
             'bus_no_series' => ['code', 'description', 'prefix', 'last_no_used', 'increment_by'],
-            'bus_members' => ['no', 'user_id', 'national_id', 'phone', 'member_status', 'is_chakama', 'is_sbf', 'customer_no', 'vendor_no'],
+            'bus_members' => ['no', 'user_id', 'national_id', 'phone', 'member_status', 'is_chakama', 'is_sbf', 'customer_no', 'vendor_no', 'type', 'member_id', 'name', 'email', 'date_of_birth', 'relationship', 'contact_preference'],
+            'bus_documents' => ['id', 'documentable_type', 'documentable_id', 'document_type', 'file_path', 'disk', 'original_name', 'mime_type', 'file_size'],
             'bus_vendors' => ['no', 'name', 'vendor_type', 'member_id', 'payment_terms'],
             'bus_projects' => ['no', 'title', 'budget_lcy', 'total_actual_cost', 'status'],
             'doc_sales_headers' => ['no', 'member_no', 'posting_date', 'due_date', 'total_amount'],
@@ -72,6 +74,7 @@ class DatabaseSchemaTest extends TestCase
             DetailedLedgerEntry::class => 'ent_detailed_ledger',
             ProjectLedgerEntry::class => 'ent_project_ledger',
             Notification::class => 'bus_notifications',
+            Document::class => 'bus_documents',
         ];
 
         foreach ($models as $modelClass => $table) {
