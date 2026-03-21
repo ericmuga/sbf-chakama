@@ -23,9 +23,12 @@ class MembersTable
                     ->label('Name')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('national_id')
-                    ->label('National ID')
+                TextColumn::make('identity_no')
+                    ->label('Identity No')
                     ->searchable(),
+                TextColumn::make('identity_type')
+                    ->label('ID Type')
+                    ->badge(),
                 TextColumn::make('phone')
                     ->searchable(),
                 TextColumn::make('member_status')

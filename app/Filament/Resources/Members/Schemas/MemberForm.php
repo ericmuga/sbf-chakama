@@ -27,8 +27,19 @@ class MemberForm
                             ->relationship('user', 'name')
                             ->searchable()
                             ->preload(),
-                        TextInput::make('national_id')
-                            ->label('National ID')
+                        Select::make('identity_type')
+                            ->label('Identity Type')
+                            ->options([
+                                'national_id' => 'National ID',
+                                'passport_no' => 'Passport No',
+                                'birth_cert_no' => 'Birth Certificate No',
+                                'driving_licence_no' => 'Driving Licence No',
+                                'pin_no' => 'PIN No',
+                            ])
+                            ->required(),
+                        TextInput::make('identity_no')
+                            ->label('Identity Number')
+                            ->required()
                             ->maxLength(50)
                             ->unique(ignoreRecord: true),
                         TextInput::make('phone')

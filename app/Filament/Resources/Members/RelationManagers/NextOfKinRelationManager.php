@@ -27,8 +27,19 @@ class NextOfKinRelationManager extends RelationManager
                     ->required()
                     ->maxLength(255)
                     ->columnSpanFull(),
-                TextInput::make('national_id')
-                    ->label('National ID')
+                Select::make('identity_type')
+                    ->label('Identity Type')
+                    ->options([
+                        'national_id' => 'National ID',
+                        'passport_no' => 'Passport No',
+                        'birth_cert_no' => 'Birth Certificate No',
+                        'driving_licence_no' => 'Driving Licence No',
+                        'pin_no' => 'PIN No',
+                    ])
+                    ->required(),
+                TextInput::make('identity_no')
+                    ->label('Identity Number')
+                    ->required()
                     ->maxLength(50),
                 TextInput::make('phone')
                     ->tel()

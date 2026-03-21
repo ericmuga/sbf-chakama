@@ -20,8 +20,19 @@
                         <flux:text class="mt-1 font-semibold">{{ $member->user?->name ?? $member->name ?? '—' }}</flux:text>
                     </div>
                     <div>
-                        <flux:text class="text-xs font-medium text-zinc-500 uppercase tracking-wide">{{ __('National ID') }}</flux:text>
-                        <flux:text class="mt-1">{{ $member->national_id ?? '—' }}</flux:text>
+                        <flux:text class="text-xs font-medium text-zinc-500 uppercase tracking-wide">{{ __('Identity Type') }}</flux:text>
+                        <flux:text class="mt-1">{{ match($member->identity_type) {
+                            'national_id' => 'National ID',
+                            'passport_no' => 'Passport No',
+                            'birth_cert_no' => 'Birth Certificate No',
+                            'driving_licence_no' => 'Driving Licence No',
+                            'pin_no' => 'PIN No',
+                            default => '—',
+                        } }}</flux:text>
+                    </div>
+                    <div>
+                        <flux:text class="text-xs font-medium text-zinc-500 uppercase tracking-wide">{{ __('Identity Number') }}</flux:text>
+                        <flux:text class="mt-1">{{ $member->identity_no ?? '—' }}</flux:text>
                     </div>
                     <div>
                         <flux:text class="text-xs font-medium text-zinc-500 uppercase tracking-wide">{{ __('Phone') }}</flux:text>

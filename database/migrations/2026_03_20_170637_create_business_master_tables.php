@@ -21,7 +21,8 @@ return new class extends Migration
             $table->id();
             $table->string('no', 20)->unique();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('national_id', 50)->unique();
+            $table->string('identity_no', 50)->unique();
+            $table->enum('identity_type', ['national_id', 'passport_no', 'birth_cert_no', 'driving_licence_no', 'pin_no'])->default('national_id');
             $table->string('phone', 20);
             $table->enum('member_status', ['active', 'lapsed', 'suspended']);
             $table->string('customer_no', 20)->nullable();

@@ -20,7 +20,7 @@ return new class extends Migration
 
             $table->string('no', 20)->nullable()->change();
             $table->unsignedBigInteger('user_id')->nullable()->change();
-            $table->string('national_id', 50)->nullable()->change();
+            $table->string('identity_no', 50)->nullable()->change();
             $table->string('phone', 20)->nullable()->change();
             $table->enum('member_status', ['active', 'lapsed', 'suspended'])->nullable()->change();
         });
@@ -34,7 +34,7 @@ return new class extends Migration
 
             $table->string('no', 20)->nullable(false)->change();
             $table->unsignedBigInteger('user_id')->nullable(false)->change();
-            $table->string('national_id', 50)->nullable(false)->change();
+            $table->string('identity_no', 50)->nullable(false)->change();
             $table->string('phone', 20)->nullable(false)->change();
             $table->enum('member_status', ['active', 'lapsed', 'suspended'])->nullable(false)->change();
         });
