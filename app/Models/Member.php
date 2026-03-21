@@ -2,6 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Finance\Customer as FinanceCustomer;
+use App\Models\Finance\CustomerPostingGroup;
+use App\Models\Finance\NumberSeries;
+use App\Models\Finance\PurchaseSetup;
+use App\Models\Finance\SalesSetup;
+use App\Models\Finance\Vendor as FinanceVendor;
+use App\Models\Finance\VendorPostingGroup;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,6 +34,46 @@ class Member extends Model
             'is_sbf' => 'boolean',
             'date_of_birth' => 'date',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Member $member) {
+            if (empty($member->no)) {
+                $setup = SalesSetup::first();
+                if ($setup?->member_nos) {
+                    $member->no = NumberSeries::generate($setup->member_nos);
+                }
+            }
+        });
+
+        static::created(function (Member $member) {
+            $salesSetup = SalesSetup::first();
+            $purchaseSetup = PurchaseSetup::first();
+            $cpg = CustomerPostingGroup::where('code', 'MEMBER')->first();
+            $vpg = VendorPostingGroup::where('code', 'MEMBER')->first();
+            $displayName = $member->name ?? $member->user?->name ?? $member->no;
+
+            if ($salesSetup?->customer_nos && $cpg) {
+                $customerNo = NumberSeries::generate($salesSetup->customer_nos);
+                $member->updateQuietly(['customer_no' => $customerNo]);
+                FinanceCustomer::create([
+                    'no' => $customerNo,
+                    'name' => $displayName,
+                    'customer_posting_group_id' => $cpg->id,
+                ]);
+            }
+
+            if ($purchaseSetup?->vendor_nos && $vpg) {
+                $vendorNo = NumberSeries::generate($purchaseSetup->vendor_nos);
+                $member->updateQuietly(['vendor_no' => $vendorNo]);
+                FinanceVendor::create([
+                    'no' => $vendorNo,
+                    'name' => $displayName,
+                    'vendor_posting_group_id' => $vpg->id,
+                ]);
+            }
+        });
     }
 
     public function scopeMembers(Builder $query): Builder
@@ -77,5 +124,15 @@ class Member extends Model
     public function documents(): MorphMany
     {
         return $this->morphMany(Document::class, 'documentable');
+    }
+
+    public function financeCustomer(): HasOne
+    {
+        return $this->hasOne(FinanceCustomer::class, 'no', 'customer_no');
+    }
+
+    public function financeVendor(): HasOne
+    {
+        return $this->hasOne(FinanceVendor::class, 'no', 'vendor_no');
     }
 }

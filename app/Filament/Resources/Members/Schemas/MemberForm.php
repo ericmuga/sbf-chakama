@@ -20,10 +20,16 @@ class MemberForm
                     ->schema([
                         TextInput::make('no')
                             ->label('Member Number')
-                            ->maxLength(20)
-                            ->unique(ignoreRecord: true),
+                            ->disabled()
+                            ->dehydrated()
+                            ->hidden(fn (string $operation): bool => $operation === 'create')
+                            ->maxLength(20),
+                        TextInput::make('name')
+                            ->label('Full Name')
+                            ->required()
+                            ->maxLength(255),
                         Select::make('user_id')
-                            ->label('User')
+                            ->label('User Account')
                             ->relationship('user', 'name')
                             ->searchable()
                             ->preload(),
@@ -54,9 +60,15 @@ class MemberForm
                             ]),
                         TextInput::make('customer_no')
                             ->label('Customer No')
+                            ->disabled()
+                            ->dehydrated()
+                            ->hidden(fn (string $operation): bool => $operation === 'create')
                             ->maxLength(20),
                         TextInput::make('vendor_no')
                             ->label('Vendor No')
+                            ->disabled()
+                            ->dehydrated()
+                            ->hidden(fn (string $operation): bool => $operation === 'create')
                             ->maxLength(20),
                         Toggle::make('is_chakama')
                             ->label('Chakama Member')
