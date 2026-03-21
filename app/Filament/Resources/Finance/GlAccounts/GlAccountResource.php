@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Finance\GlAccounts;
 use App\Filament\Resources\Finance\GlAccounts\Pages\CreateGlAccount;
 use App\Filament\Resources\Finance\GlAccounts\Pages\EditGlAccount;
 use App\Filament\Resources\Finance\GlAccounts\Pages\ListGlAccounts;
+use App\Filament\Resources\Finance\GlAccounts\RelationManagers\GlEntriesRelationManager;
 use App\Filament\Resources\Finance\GlAccounts\Schemas\GlAccountForm;
 use App\Filament\Resources\Finance\GlAccounts\Tables\GlAccountsTable;
 use App\Models\Finance\GlAccount;
@@ -61,7 +62,7 @@ class GlAccountResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            GlEntriesRelationManager::class,
         ];
     }
 

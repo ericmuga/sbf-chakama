@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Finance\VendorLedgerEntries\Pages;
 
 use App\Filament\Resources\Finance\VendorLedgerEntries\VendorLedgerEntryResource;
-use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListVendorLedgerEntries extends ListRecords
@@ -12,8 +11,6 @@ class ListVendorLedgerEntries extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [
-            CreateAction::make(),
-        ];
+        return [];
     }
 }
