@@ -9,6 +9,8 @@ use App\Models\Finance\GeneralPostingSetup;
 use App\Models\Finance\GlAccount;
 use App\Models\Finance\NumberSeries;
 use App\Models\Finance\PaymentTerms;
+use App\Models\Finance\PurchaseSetup;
+use App\Models\Finance\SalesSetup;
 use App\Models\Finance\Service;
 use App\Models\Finance\ServicePostingGroup;
 use App\Models\Finance\Vendor;
@@ -20,36 +22,58 @@ class FinanceSeeder extends Seeder
     public function run(): void
     {
         $sinv = NumberSeries::create([
-            'code' => 'SINV',
-            'description' => 'Sales Invoices',
-            'prefix' => 'SINV',
-            'last_no' => 0,
-            'length' => 6,
-            'is_manual_allowed' => false,
-            'prevent_repeats' => true,
-            'is_active' => true,
+            'code' => 'SINV', 'description' => 'Sales Invoices',
+            'prefix' => 'SINV-', 'last_no' => 0, 'length' => 6,
+            'is_manual_allowed' => false, 'prevent_repeats' => true, 'is_active' => true,
+        ]);
+
+        $psinv = NumberSeries::create([
+            'code' => 'PSINV', 'description' => 'Posted Sales Invoices',
+            'prefix' => 'PSINV-', 'last_no' => 0, 'length' => 6,
+            'is_manual_allowed' => false, 'prevent_repeats' => true, 'is_active' => true,
         ]);
 
         $pinv = NumberSeries::create([
-            'code' => 'PINV',
-            'description' => 'Purchase Invoices',
-            'prefix' => 'PINV',
-            'last_no' => 0,
-            'length' => 6,
-            'is_manual_allowed' => false,
-            'prevent_repeats' => true,
-            'is_active' => true,
+            'code' => 'PINV', 'description' => 'Purchase Invoices',
+            'prefix' => 'PINV-', 'last_no' => 0, 'length' => 6,
+            'is_manual_allowed' => false, 'prevent_repeats' => true, 'is_active' => true,
+        ]);
+
+        $ppinv = NumberSeries::create([
+            'code' => 'PPINV', 'description' => 'Posted Purchase Invoices',
+            'prefix' => 'PPINV-', 'last_no' => 0, 'length' => 6,
+            'is_manual_allowed' => false, 'prevent_repeats' => true, 'is_active' => true,
         ]);
 
         NumberSeries::create([
-            'code' => 'PCST',
-            'description' => 'Posted Documents',
-            'prefix' => 'PCST',
-            'last_no' => 0,
-            'length' => 6,
-            'is_manual_allowed' => false,
-            'prevent_repeats' => true,
-            'is_active' => true,
+            'code' => 'PCST', 'description' => 'Posted Documents',
+            'prefix' => 'PCST-', 'last_no' => 0, 'length' => 6,
+            'is_manual_allowed' => false, 'prevent_repeats' => true, 'is_active' => true,
+        ]);
+
+        $custNos = NumberSeries::create([
+            'code' => 'CUST', 'description' => 'Customer Numbers',
+            'prefix' => 'CUST-', 'last_no' => 0, 'length' => 6,
+            'is_manual_allowed' => false, 'prevent_repeats' => true, 'is_active' => true,
+        ]);
+
+        $vendNos = NumberSeries::create([
+            'code' => 'VEND', 'description' => 'Vendor Numbers',
+            'prefix' => 'VEND-', 'last_no' => 0, 'length' => 6,
+            'is_manual_allowed' => false, 'prevent_repeats' => true, 'is_active' => true,
+        ]);
+
+        $mbrNos = NumberSeries::create([
+            'code' => 'MBR', 'description' => 'Member Numbers',
+            'prefix' => 'MBR-', 'last_no' => 0, 'length' => 6,
+            'is_manual_allowed' => false, 'prevent_repeats' => true, 'is_active' => true,
+        ]);
+
+        $memberCpg = CustomerPostingGroup::create([
+            'code' => 'MEMBER',
+            'description' => 'Member Customers',
+            'receivables_account_no' => '1100',
+            'service_charge_account_no' => null,
         ]);
 
         $domestic = CustomerPostingGroup::create([
@@ -64,6 +88,12 @@ class FinanceSeeder extends Seeder
             'description' => 'Foreign Customers',
             'receivables_account_no' => '1110',
             'service_charge_account_no' => null,
+        ]);
+
+        $memberVpg = VendorPostingGroup::create([
+            'code' => 'MEMBER',
+            'description' => 'Member Vendors',
+            'payables_account_no' => '2100',
         ]);
 
         VendorPostingGroup::create([
@@ -100,6 +130,12 @@ class FinanceSeeder extends Seeder
             'code' => 'MAIN-BANK',
             'description' => 'Main Bank Account',
             'bank_account_gl_no' => '1050',
+        ]);
+
+        GeneralPostingSetup::create([
+            'customer_posting_group_id' => $memberCpg->id,
+            'service_posting_group_id' => $memberServices->id,
+            'sales_account_no' => '4000',
         ]);
 
         GeneralPostingSetup::create([
@@ -204,5 +240,20 @@ class FinanceSeeder extends Seeder
             'unit_price' => 200.0000,
             'service_posting_group_id' => $admin->id,
         ]);
+
+        SalesSetup::create([
+            'invoice_nos' => $sinv->code,
+            'posted_invoice_nos' => $psinv->code,
+            'customer_nos' => $custNos->code,
+            'member_nos' => $mbrNos->code,
+        ]);
+
+        PurchaseSetup::create([
+            'invoice_nos' => $pinv->code,
+            'posted_invoice_nos' => $ppinv->code,
+            'vendor_nos' => $vendNos->code,
+        ]);
+
+        unset($memberVpg); // used implicitly via MEMBER code lookup in model events
     }
 }

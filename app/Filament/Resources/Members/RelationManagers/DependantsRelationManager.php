@@ -115,7 +115,7 @@ class DependantsRelationManager extends RelationManager
                     ->label('Download Template')
                     ->icon(Heroicon::ArrowDownTray)
                     ->color('gray')
-                    ->url(route('admin.templates.dependants'))
+                    ->url(fn () => route('admin.templates.dependants'))
                     ->openUrlInNewTab(),
                 Action::make('import')
                     ->label('Import from CSV')

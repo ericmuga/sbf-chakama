@@ -35,4 +35,21 @@ class NumberSeries extends Model
     {
         return $this->hasMany(PurchaseHeader::class, 'number_series_code', 'code');
     }
+
+    /**
+     * Generate the next number in this series (thread-safe via lock).
+     */
+    public static function generate(string $code): string
+    {
+        $series = static::where('code', $code)->lockForUpdate()->first();
+
+        if (! $series || ! $series->is_active) {
+            return '';
+        }
+
+        $series->increment('last_no');
+        $series->update(['last_date_used' => now()->toDateString()]);
+
+        return ($series->prefix ?? '').str_pad((string) $series->last_no, $series->length, '0', STR_PAD_LEFT);
+    }
 }

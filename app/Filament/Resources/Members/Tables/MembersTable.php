@@ -60,7 +60,7 @@ class MembersTable
                     ->label('Download Template')
                     ->icon(Heroicon::ArrowDownTray)
                     ->color('gray')
-                    ->url(route('admin.templates.members'))
+                    ->url(fn () => route('admin.templates.members'))
                     ->openUrlInNewTab(),
                 Action::make('import')
                     ->label('Import from CSV')

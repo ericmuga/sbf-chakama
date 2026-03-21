@@ -121,7 +121,7 @@ class NextOfKinRelationManager extends RelationManager
                     ->label('Download Template')
                     ->icon(Heroicon::ArrowDownTray)
                     ->color('gray')
-                    ->url(route('admin.templates.next-of-kin'))
+                    ->url(fn () => route('admin.templates.next-of-kin'))
                     ->openUrlInNewTab(),
                 Action::make('import')
                     ->label('Import from CSV')
