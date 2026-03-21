@@ -15,6 +15,19 @@ class SalesHeader extends Model
 
     protected $table = 'sales_headers';
 
+    protected static function booted(): void
+    {
+        static::creating(function (SalesHeader $header) {
+            if (empty($header->no)) {
+                $setup = SalesSetup::first();
+                if ($setup?->invoice_nos) {
+                    $header->no = NumberSeries::generate($setup->invoice_nos);
+                    $header->number_series_code = $setup->invoice_nos;
+                }
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [
