@@ -24,6 +24,10 @@ class VendorPaymentResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Finance';
 
+    protected static ?string $modelLabel = 'Payment';
+
+    protected static ?string $pluralModelLabel = 'Payments';
+
     protected static ?string $navigationLabel = 'Payments';
 
     protected static ?int $navigationSort = 60;
