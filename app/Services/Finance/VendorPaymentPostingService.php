@@ -2,6 +2,7 @@
 
 namespace App\Services\Finance;
 
+use App\Models\Finance\BankLedgerEntry;
 use App\Models\Finance\GlEntry;
 use App\Models\Finance\VendorApplication;
 use App\Models\Finance\VendorLedgerEntry;
@@ -41,6 +42,7 @@ class VendorPaymentPostingService
                 'amount' => -$payment->amount,
                 'remaining_amount' => -$payment->amount,
                 'is_open' => true,
+                'created_by' => auth()->id(),
             ]);
 
             // G/L entry — debit payables (vendor owes less)
@@ -54,6 +56,24 @@ class VendorPaymentPostingService
                     'credit_amount' => 0,
                     'source_type' => 'VendorPayment',
                     'source_id' => $payment->id,
+                    'created_by' => auth()->id(),
+                ]);
+            }
+
+            // Bank ledger entry — money sent out
+            if ($payment->bank_account_id) {
+                $nextBankEntryNo = (BankLedgerEntry::lockForUpdate()->max('entry_no') ?? 0) + 1;
+                BankLedgerEntry::create([
+                    'entry_no' => $nextBankEntryNo,
+                    'bank_account_id' => $payment->bank_account_id,
+                    'document_type' => 'payment',
+                    'document_no' => $payment->no,
+                    'posting_date' => $payment->posting_date,
+                    'description' => null,
+                    'amount' => -$payment->amount,
+                    'source_type' => 'VendorPayment',
+                    'source_id' => $payment->id,
+                    'created_by' => auth()->id(),
                 ]);
             }
 
@@ -68,6 +88,7 @@ class VendorPaymentPostingService
                     'credit_amount' => $payment->amount,
                     'source_type' => 'VendorPayment',
                     'source_id' => $payment->id,
+                    'created_by' => auth()->id(),
                 ]);
             }
 

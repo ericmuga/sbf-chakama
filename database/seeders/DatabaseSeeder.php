@@ -22,6 +22,13 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $this->call(FinanceSeeder::class);
+        $this->call([
+            FinanceSeeder::class,
+            ClaimNumberSeriesSeeder::class,
+            MpesaSetupSeeder::class,
+            SampleMemberSeeder::class,
+            ClaimsSeeder::class,
+            DirectJournalServicesSeeder::class,
+        ]);
     }
 }

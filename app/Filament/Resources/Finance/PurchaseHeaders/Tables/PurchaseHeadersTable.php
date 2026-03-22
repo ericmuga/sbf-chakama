@@ -18,6 +18,10 @@ class PurchaseHeadersTable
                     ->label('Document No')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('claim.no')
+                    ->label('Claim Ref')
+                    ->searchable()
+                    ->placeholder('—'),
                 TextColumn::make('vendor.name')
                     ->label('Vendor')
                     ->searchable()

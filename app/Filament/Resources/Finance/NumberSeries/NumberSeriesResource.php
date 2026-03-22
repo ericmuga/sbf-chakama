@@ -22,11 +22,11 @@ class NumberSeriesResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedHashtag;
 
-    protected static UnitEnum|string|null $navigationGroup = 'Finance';
+    protected static UnitEnum|string|null $navigationGroup = 'Finance — Setup';
 
     protected static ?string $navigationLabel = 'Number Series';
 
-    protected static ?int $navigationSort = 90;
+    protected static ?int $navigationSort = 20;
 
     public static function canViewAny(): bool
     {

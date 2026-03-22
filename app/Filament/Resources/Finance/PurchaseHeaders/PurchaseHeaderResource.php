@@ -22,15 +22,15 @@ class PurchaseHeaderResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShoppingCart;
 
-    protected static UnitEnum|string|null $navigationGroup = 'Finance';
+    protected static UnitEnum|string|null $navigationGroup = 'Finance — Expenses & Claims';
 
     protected static ?string $modelLabel = 'Purchase Document';
 
     protected static ?string $pluralModelLabel = 'Purchase Documents';
 
-    protected static ?string $navigationLabel = 'Purchases';
+    protected static ?string $navigationLabel = 'Expenses';
 
-    protected static ?int $navigationSort = 40;
+    protected static ?int $navigationSort = 10;
 
     public static function canViewAny(): bool
     {

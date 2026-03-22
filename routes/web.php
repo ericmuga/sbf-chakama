@@ -4,7 +4,10 @@ use App\Http\Controllers\TemplateController;
 use App\Livewire\Members\MemberCard;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('home');
+Route::get('/', fn () => auth()->check()
+    ? redirect('/admin')
+    : redirect('/admin/login')
+)->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');

@@ -25,6 +25,10 @@ class UserResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
+    protected static \UnitEnum|string|null $navigationGroup = 'Administration';
+
+    protected static ?int $navigationSort = 10;
+
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -89,6 +93,9 @@ class UserResource extends Resource
                             ->inline(false),
                         Toggle::make('is_sbf')
                             ->label('SBF member')
+                            ->inline(false),
+                        Toggle::make('exclude_from_billing')
+                            ->label('Exclude from billing')
                             ->inline(false),
                         TextInput::make('customer_no')
                             ->maxLength(20),

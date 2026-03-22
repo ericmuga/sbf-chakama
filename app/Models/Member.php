@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ClaimPaymentMethod;
 use App\Models\Finance\Customer as FinanceCustomer;
 use App\Models\Finance\CustomerPostingGroup;
 use App\Models\Finance\NumberSeries;
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-#[Fillable(['no', 'user_id', 'identity_no', 'identity_type', 'phone', 'member_status', 'is_chakama', 'is_sbf', 'customer_no', 'vendor_no', 'name', 'type', 'member_id', 'email', 'date_of_birth', 'relationship', 'contact_preference'])]
+#[Fillable(['no', 'user_id', 'identity_no', 'identity_type', 'phone', 'member_status', 'is_chakama', 'is_sbf', 'customer_no', 'vendor_no', 'name', 'type', 'member_id', 'email', 'date_of_birth', 'relationship', 'contact_preference', 'bank_name', 'bank_account_name', 'bank_account_no', 'bank_branch', 'mpesa_phone', 'preferred_payment_method', 'exclude_from_billing'])]
 class Member extends Model
 {
     use HasFactory;
@@ -33,6 +34,7 @@ class Member extends Model
             'is_chakama' => 'boolean',
             'is_sbf' => 'boolean',
             'date_of_birth' => 'date',
+            'preferred_payment_method' => ClaimPaymentMethod::class,
         ];
     }
 
@@ -76,9 +78,24 @@ class Member extends Model
         });
     }
 
+    public function claims(): HasMany
+    {
+        return $this->hasMany(Claim::class);
+    }
+
     public function scopeMembers(Builder $query): Builder
     {
         return $query->where('type', 'member');
+    }
+
+    public function scopeSbfMembers(Builder $query): Builder
+    {
+        return $query->where('is_sbf', true);
+    }
+
+    public function getHasPaymentDetailsAttribute(): bool
+    {
+        return filled($this->bank_account_no) || filled($this->mpesa_phone);
     }
 
     public function user(): BelongsTo

@@ -24,6 +24,11 @@ class PurchaseHeaderForm
                     ->dehydrated()
                     ->hidden(fn (string $operation): bool => $operation === 'create')
                     ->maxLength(50),
+                TextInput::make('claim.no')
+                    ->label('Claim Reference')
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->hidden(fn (string $operation): bool => $operation === 'create'),
                 Select::make('document_type')
                     ->options([
                         'invoice' => 'Invoice',

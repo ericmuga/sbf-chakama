@@ -5,10 +5,12 @@ namespace App\Filament\Resources\Finance\CashReceipts\Schemas;
 use App\Models\Finance\CustomerLedgerEntry;
 use App\Models\Finance\PaymentMethod;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
@@ -78,6 +80,29 @@ class CashReceiptForm
                     ->numeric()
                     ->minValue(0)
                     ->required(),
+                TextInput::make('description')
+                    ->label('Description')
+                    ->maxLength(255),
+                Section::make('M-Pesa / STK Push Details')
+                    ->description('Populated automatically from the Safaricom STK Push callback.')
+                    ->columns(3)
+                    ->schema([
+                        TextInput::make('mpesa_receipt_no')
+                            ->label('M-Pesa Receipt No')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->placeholder('—'),
+                        TextInput::make('mpesa_phone')
+                            ->label('Paying From (Phone)')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->placeholder('—'),
+                        DateTimePicker::make('created_at')
+                            ->label('Received At')
+                            ->disabled()
+                            ->dehydrated(false),
+                    ])
+                    ->hidden(fn (string $operation): bool => $operation === 'create'),
                 Repeater::make('allocations')
                     ->label('Invoice Allocations')
                     ->schema([

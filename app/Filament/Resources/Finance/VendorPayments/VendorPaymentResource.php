@@ -22,15 +22,15 @@ class VendorPaymentResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCreditCard;
 
-    protected static UnitEnum|string|null $navigationGroup = 'Finance';
+    protected static UnitEnum|string|null $navigationGroup = 'Finance — Expenses & Claims';
 
     protected static ?string $modelLabel = 'Payment';
 
     protected static ?string $pluralModelLabel = 'Payments';
 
-    protected static ?string $navigationLabel = 'Payments';
+    protected static ?string $navigationLabel = 'Disbursements';
 
-    protected static ?int $navigationSort = 60;
+    protected static ?int $navigationSort = 20;
 
     public static function canViewAny(): bool
     {

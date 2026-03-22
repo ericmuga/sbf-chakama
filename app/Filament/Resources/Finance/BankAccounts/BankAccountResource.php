@@ -22,11 +22,11 @@ class BankAccountResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingLibrary;
 
-    protected static UnitEnum|string|null $navigationGroup = 'Finance';
+    protected static UnitEnum|string|null $navigationGroup = 'Finance — Setup';
 
     protected static ?string $navigationLabel = 'Bank Accounts';
 
-    protected static ?int $navigationSort = 65;
+    protected static ?int $navigationSort = 100;
 
     public static function canViewAny(): bool
     {

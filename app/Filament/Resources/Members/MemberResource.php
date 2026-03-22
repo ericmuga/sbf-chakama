@@ -25,6 +25,10 @@ class MemberResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
 
+    protected static \UnitEnum|string|null $navigationGroup = 'Administration';
+
+    protected static ?int $navigationSort = 20;
+
     public static function form(Schema $schema): Schema
     {
         return MemberForm::configure($schema);

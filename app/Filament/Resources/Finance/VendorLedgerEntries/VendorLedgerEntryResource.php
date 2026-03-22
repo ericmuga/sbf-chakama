@@ -21,11 +21,11 @@ class VendorLedgerEntryResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBookOpen;
 
-    protected static UnitEnum|string|null $navigationGroup = 'Finance';
+    protected static UnitEnum|string|null $navigationGroup = 'Finance — Ledgers';
 
     protected static ?string $navigationLabel = 'Vendor Ledger';
 
-    protected static ?int $navigationSort = 150;
+    protected static ?int $navigationSort = 20;
 
     public static function canViewAny(): bool
     {

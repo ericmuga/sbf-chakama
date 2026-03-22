@@ -20,11 +20,11 @@ class GlEntryResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static UnitEnum|string|null $navigationGroup = 'Finance';
+    protected static UnitEnum|string|null $navigationGroup = 'Finance — Ledgers';
 
     protected static ?string $navigationLabel = 'G/L Entries';
 
-    protected static ?int $navigationSort = 160;
+    protected static ?int $navigationSort = 30;
 
     public static function canViewAny(): bool
     {

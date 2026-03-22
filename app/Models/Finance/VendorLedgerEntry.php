@@ -2,13 +2,14 @@
 
 namespace App\Models\Finance;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['entry_no', 'vendor_id', 'document_type', 'document_no', 'posting_date', 'due_date', 'amount', 'remaining_amount', 'is_open'])]
+#[Fillable(['entry_no', 'vendor_id', 'document_type', 'document_no', 'posting_date', 'due_date', 'amount', 'remaining_amount', 'is_open', 'created_by'])]
 class VendorLedgerEntry extends Model
 {
     use HasFactory;
@@ -29,6 +30,11 @@ class VendorLedgerEntry extends Model
             'is_open' => 'boolean',
             'created_at' => 'datetime',
         ];
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function vendor(): BelongsTo

@@ -13,6 +13,9 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\Layout\Panel;
+use Filament\Tables\Columns\Layout\Split;
+use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
@@ -23,15 +26,23 @@ class CustomerLedgerEntriesTable
     {
         return $table
             ->columns([
-                TextColumn::make('entry_no')->label('Entry No')->sortable(),
-                TextColumn::make('customer.name')->label('Customer')->sortable()->searchable(),
-                TextColumn::make('document_type')->label('Type')->sortable(),
-                TextColumn::make('document_no')->label('Document No')->sortable()->searchable(),
-                TextColumn::make('posting_date')->label('Posting Date')->date()->sortable(),
-                TextColumn::make('due_date')->label('Due Date')->date()->sortable(),
-                TextColumn::make('amount')->label('Amount')->money()->sortable(),
-                TextColumn::make('remaining_amount')->label('Remaining')->money()->sortable(),
-                IconColumn::make('is_open')->label('Open')->boolean(),
+                Split::make([
+                    TextColumn::make('entry_no')->label('Entry #')->sortable()->grow(false),
+                    TextColumn::make('customer.name')->label('Customer')->sortable()->searchable(),
+                    TextColumn::make('document_type')->label('Type')->badge()->grow(false),
+                    TextColumn::make('document_no')->label('Document No')->sortable()->searchable()->grow(false),
+                    TextColumn::make('amount')->label('Amount')->money()->sortable()->grow(false),
+                    TextColumn::make('remaining_amount')->label('Remaining')->money()->sortable()->grow(false),
+                    IconColumn::make('is_open')->label('Open')->boolean()->grow(false),
+                ]),
+                Panel::make([
+                    Stack::make([
+                        TextColumn::make('posting_date')->label('Posting Date')->date()->icon('heroicon-o-calendar'),
+                        TextColumn::make('due_date')->label('Due Date')->date()->icon('heroicon-o-calendar-days'),
+                        TextColumn::make('createdBy.name')->label('Posted by')->icon('heroicon-o-user'),
+                        TextColumn::make('created_at')->label('Posted at')->dateTime()->icon('heroicon-o-clock'),
+                    ])->space(1),
+                ])->collapsible(),
             ])
             ->defaultSort('entry_no', 'desc')
             ->recordActions([

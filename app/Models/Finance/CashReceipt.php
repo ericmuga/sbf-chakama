@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['no', 'number_series_code', 'customer_id', 'bank_account_id', 'payment_method_id', 'posting_date', 'amount', 'status'])]
+#[Fillable(['no', 'number_series_code', 'customer_id', 'bank_account_id', 'payment_method_id', 'posting_date', 'amount', 'description', 'mpesa_receipt_no', 'mpesa_phone', 'status'])]
 class CashReceipt extends Model
 {
     use HasFactory;
@@ -52,6 +52,8 @@ class CashReceipt extends Model
                     $receipt->number_series_code = $setup->receipt_nos;
                 }
             }
+
+            $receipt->created_at ??= now();
         });
     }
 }

@@ -2,12 +2,13 @@
 
 namespace App\Models\Finance;
 
+use App\Models\Claim;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['no', 'number_series_code', 'vendor_id', 'bank_account_id', 'payment_method_id', 'posting_date', 'amount', 'status'])]
+#[Fillable(['no', 'number_series_code', 'vendor_id', 'bank_account_id', 'payment_method_id', 'posting_date', 'amount', 'status', 'claim_id'])]
 class VendorPayment extends Model
 {
     use HasFactory;
@@ -40,6 +41,11 @@ class VendorPayment extends Model
     public function paymentMethod(): BelongsTo
     {
         return $this->belongsTo(PaymentMethod::class);
+    }
+
+    public function claim(): BelongsTo
+    {
+        return $this->belongsTo(Claim::class);
     }
 
     protected static function booted(): void

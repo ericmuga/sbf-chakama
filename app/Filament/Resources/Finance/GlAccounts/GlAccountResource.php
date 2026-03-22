@@ -23,11 +23,11 @@ class GlAccountResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTableCells;
 
-    protected static UnitEnum|string|null $navigationGroup = 'Finance';
+    protected static UnitEnum|string|null $navigationGroup = 'Finance — Setup';
 
     protected static ?string $navigationLabel = 'Chart of Accounts';
 
-    protected static ?int $navigationSort = 100;
+    protected static ?int $navigationSort = 10;
 
     public static function canViewAny(): bool
     {

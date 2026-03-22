@@ -2,6 +2,7 @@
 
 namespace App\Services\Finance;
 
+use App\Models\Finance\BankLedgerEntry;
 use App\Models\Finance\CashReceipt;
 use App\Models\Finance\CustomerApplication;
 use App\Models\Finance\CustomerLedgerEntry;
@@ -41,7 +42,25 @@ class ReceiptPostingService
                 'amount' => -$receipt->amount,
                 'remaining_amount' => -$receipt->amount,
                 'is_open' => true,
+                'created_by' => auth()->id(),
             ]);
+
+            // Bank ledger entry — money received
+            if ($receipt->bank_account_id) {
+                $nextBankEntryNo = (BankLedgerEntry::lockForUpdate()->max('entry_no') ?? 0) + 1;
+                BankLedgerEntry::create([
+                    'entry_no' => $nextBankEntryNo,
+                    'bank_account_id' => $receipt->bank_account_id,
+                    'document_type' => 'receipt',
+                    'document_no' => $receipt->no,
+                    'posting_date' => $receipt->posting_date,
+                    'description' => $receipt->description,
+                    'amount' => $receipt->amount,
+                    'source_type' => 'CashReceipt',
+                    'source_id' => $receipt->id,
+                    'created_by' => auth()->id(),
+                ]);
+            }
 
             // G/L entry — debit bank account (money received)
             $bankGlNo = $receipt->bankAccount?->bankPostingGroup?->bank_account_gl_no;
@@ -54,6 +73,7 @@ class ReceiptPostingService
                     'credit_amount' => 0,
                     'source_type' => 'CashReceipt',
                     'source_id' => $receipt->id,
+                    'created_by' => auth()->id(),
                 ]);
             }
 
@@ -68,6 +88,7 @@ class ReceiptPostingService
                     'credit_amount' => $receipt->amount,
                     'source_type' => 'CashReceipt',
                     'source_id' => $receipt->id,
+                    'created_by' => auth()->id(),
                 ]);
             }
 

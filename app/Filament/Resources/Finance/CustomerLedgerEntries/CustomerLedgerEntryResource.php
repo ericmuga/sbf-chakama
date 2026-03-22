@@ -21,11 +21,11 @@ class CustomerLedgerEntryResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBookOpen;
 
-    protected static UnitEnum|string|null $navigationGroup = 'Finance';
+    protected static UnitEnum|string|null $navigationGroup = 'Finance — Ledgers';
 
     protected static ?string $navigationLabel = 'Customer Ledger';
 
-    protected static ?int $navigationSort = 140;
+    protected static ?int $navigationSort = 10;
 
     public static function canViewAny(): bool
     {

@@ -22,9 +22,9 @@ class VendorResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingStorefront;
 
-    protected static UnitEnum|string|null $navigationGroup = 'Finance';
+    protected static UnitEnum|string|null $navigationGroup = 'Finance — Setup';
 
-    protected static ?int $navigationSort = 20;
+    protected static ?int $navigationSort = 130;
 
     public static function canViewAny(): bool
     {

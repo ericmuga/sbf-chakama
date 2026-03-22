@@ -22,15 +22,15 @@ class SalesHeaderResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
-    protected static UnitEnum|string|null $navigationGroup = 'Finance';
+    protected static UnitEnum|string|null $navigationGroup = 'Finance — Income & Deposits';
 
     protected static ?string $modelLabel = 'Sales Document';
 
     protected static ?string $pluralModelLabel = 'Sales Documents';
 
-    protected static ?string $navigationLabel = 'Sales';
+    protected static ?string $navigationLabel = 'Member Deposits';
 
-    protected static ?int $navigationSort = 30;
+    protected static ?int $navigationSort = 10;
 
     public static function canViewAny(): bool
     {

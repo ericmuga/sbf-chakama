@@ -76,6 +76,10 @@ class MemberForm
                         Toggle::make('is_sbf')
                             ->label('SBF Member')
                             ->inline(false),
+                        Toggle::make('exclude_from_billing')
+                            ->label('Exclude from Billing')
+                            ->helperText('Skip this member when processing scheduled invoices')
+                            ->inline(false),
                     ])
                     ->columns(2),
             ]);

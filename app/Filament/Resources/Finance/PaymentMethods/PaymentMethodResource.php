@@ -22,11 +22,11 @@ class PaymentMethodResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCreditCard;
 
-    protected static UnitEnum|string|null $navigationGroup = 'Finance';
+    protected static UnitEnum|string|null $navigationGroup = 'Finance — Setup';
 
     protected static ?string $navigationLabel = 'Payment Methods';
 
-    protected static ?int $navigationSort = 67;
+    protected static ?int $navigationSort = 110;
 
     public static function canViewAny(): bool
     {

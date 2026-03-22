@@ -13,7 +13,7 @@ class MemberCard extends Component
     public function mount(): void
     {
         $this->member = auth()->user()?->member()
-            ->with(['dependants.documents', 'nextOfKin.documents', 'documents'])
+            ->with(['user', 'dependants', 'nextOfKin'])
             ->first();
     }
 

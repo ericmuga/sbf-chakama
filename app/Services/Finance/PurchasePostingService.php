@@ -70,6 +70,7 @@ class PurchasePostingService
                 'amount' => $payablesSign * $totalAmount,
                 'remaining_amount' => $payablesSign * $totalAmount,
                 'is_open' => true,
+                'created_by' => auth()->id(),
             ]);
 
             // G/L entry — credit payables (invoice) or debit payables (credit memo)
@@ -81,6 +82,7 @@ class PurchasePostingService
                 'credit_amount' => $isCreditMemo ? 0 : $totalAmount,
                 'source_type' => 'PurchaseHeader',
                 'source_id' => $header->id,
+                'created_by' => auth()->id(),
             ]);
 
             // G/L entries — debit expense per line (invoice) or credit expense (credit memo)
@@ -94,6 +96,7 @@ class PurchasePostingService
                     'credit_amount' => $isCreditMemo ? $line->line_amount : 0,
                     'source_type' => 'PurchaseLine',
                     'source_id' => $line->id,
+                    'created_by' => auth()->id(),
                 ]);
             }
 

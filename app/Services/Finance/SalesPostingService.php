@@ -76,6 +76,7 @@ class SalesPostingService
                 'amount' => $totalAmount,
                 'remaining_amount' => $totalAmount,
                 'is_open' => true,
+                'created_by' => auth()->id(),
             ]);
 
             // G/L entry — debit receivables (already validated above)
@@ -87,6 +88,7 @@ class SalesPostingService
                 'credit_amount' => 0,
                 'source_type' => 'SalesHeader',
                 'source_id' => $header->id,
+                'created_by' => auth()->id(),
             ]);
 
             // G/L entries — credit revenue per line (GPS already resolved and validated)
@@ -100,6 +102,7 @@ class SalesPostingService
                     'credit_amount' => $line->line_amount,
                     'source_type' => 'SalesLine',
                     'source_id' => $line->id,
+                    'created_by' => auth()->id(),
                 ]);
             }
 

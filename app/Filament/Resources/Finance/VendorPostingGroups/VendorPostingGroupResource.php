@@ -22,11 +22,11 @@ class VendorPostingGroupResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
-    protected static UnitEnum|string|null $navigationGroup = 'Finance';
+    protected static UnitEnum|string|null $navigationGroup = 'Finance — Setup';
 
     protected static ?string $navigationLabel = 'Vendor Posting Groups';
 
-    protected static ?int $navigationSort = 120;
+    protected static ?int $navigationSort = 60;
 
     public static function canViewAny(): bool
     {

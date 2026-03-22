@@ -22,11 +22,11 @@ class GeneralPostingSetupResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAdjustmentsHorizontal;
 
-    protected static UnitEnum|string|null $navigationGroup = 'Finance';
+    protected static UnitEnum|string|null $navigationGroup = 'Finance — Setup';
 
     protected static ?string $navigationLabel = 'General Posting Setup';
 
-    protected static ?int $navigationSort = 130;
+    protected static ?int $navigationSort = 70;
 
     public static function canViewAny(): bool
     {

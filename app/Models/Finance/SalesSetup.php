@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['invoice_nos', 'posted_invoice_nos', 'customer_nos', 'member_nos', 'receipt_nos'])]
+#[Fillable(['invoice_nos', 'posted_invoice_nos', 'customer_nos', 'member_nos', 'receipt_nos', 'claim_nos'])]
 class SalesSetup extends Model
 {
     protected $table = 'sales_setups';

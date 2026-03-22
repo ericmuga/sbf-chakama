@@ -22,11 +22,11 @@ class ServicePostingGroupResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
-    protected static UnitEnum|string|null $navigationGroup = 'Finance';
+    protected static UnitEnum|string|null $navigationGroup = 'Finance — Setup';
 
     protected static ?string $navigationLabel = 'Service Posting Groups';
 
-    protected static ?int $navigationSort = 115;
+    protected static ?int $navigationSort = 40;
 
     public static function canViewAny(): bool
     {
