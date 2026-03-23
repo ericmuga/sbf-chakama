@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Finance\PurchaseHeaders\Schemas;
 
 use App\Models\Finance\Service;
 use App\Models\Finance\Vendor;
+use App\Models\Project;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -55,6 +56,13 @@ class PurchaseHeaderForm
                     ->preload()
                     ->disabled()
                     ->dehydrated(),
+                Select::make('project_id')
+                    ->label('Project')
+                    ->options(Project::query()->orderBy('name')->pluck('name', 'id'))
+                    ->searchable()
+                    ->preload()
+                    ->default(request()->integer('project') ?: null)
+                    ->helperText('Tag this purchase document to a project for spend tracking and reporting.'),
                 DatePicker::make('posting_date')
                     ->required(),
                 DatePicker::make('due_date'),

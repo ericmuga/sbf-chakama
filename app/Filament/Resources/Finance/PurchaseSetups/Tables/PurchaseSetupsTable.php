@@ -18,6 +18,12 @@ class PurchaseSetupsTable
                     ->label('Posted Invoice No Series'),
                 TextColumn::make('vendor_nos')
                     ->label('Vendor No Series'),
+                TextColumn::make('payment_nos')
+                    ->label('Payment No Series'),
+                TextColumn::make('project_nos')
+                    ->label('Project No Series'),
+                TextColumn::make('direct_cost_nos')
+                    ->label('Direct Cost No Series'),
             ])
             ->recordActions([
                 EditAction::make(),

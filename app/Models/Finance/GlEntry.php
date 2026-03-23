@@ -2,12 +2,13 @@
 
 namespace App\Models\Finance;
 
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['posting_date', 'document_no', 'account_no', 'debit_amount', 'credit_amount', 'source_type', 'source_id', 'created_by'])]
+#[Fillable(['posting_date', 'document_no', 'account_no', 'debit_amount', 'credit_amount', 'source_type', 'source_id', 'created_by', 'project_id'])]
 class GlEntry extends Model
 {
     protected $table = 'gl_entries';
@@ -19,6 +20,11 @@ class GlEntry extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
     }
 
     protected function casts(): array
