@@ -26,6 +26,21 @@ class PurchaseSetupForm
                     ->relationship('vendorNumberSeries', 'code')
                     ->searchable()
                     ->preload(),
+                Select::make('payment_nos')
+                    ->label('Payment Number Series')
+                    ->relationship('paymentNumberSeries', 'code')
+                    ->searchable()
+                    ->preload(),
+                Select::make('project_nos')
+                    ->label('Project Number Series')
+                    ->relationship('projectNumberSeries', 'code')
+                    ->searchable()
+                    ->preload(),
+                Select::make('direct_cost_nos')
+                    ->label('Direct Cost Number Series')
+                    ->relationship('directCostNumberSeries', 'code')
+                    ->searchable()
+                    ->preload(),
             ]);
     }
 }

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Finance\NumberSeries;
+use App\Models\Finance\PurchaseSetup;
 use Illuminate\Database\Seeder;
 
 class ProjectNumberSeriesSeeder extends Seeder
@@ -34,6 +35,15 @@ class ProjectNumberSeriesSeeder extends Seeder
 
         foreach ($series as $data) {
             NumberSeries::firstOrCreate(['code' => $data['code']], $data);
+        }
+
+        $purchaseSetup = PurchaseSetup::query()->first();
+
+        if ($purchaseSetup) {
+            $purchaseSetup->update([
+                'project_nos' => $purchaseSetup->project_nos ?: 'PROJ',
+                'direct_cost_nos' => $purchaseSetup->direct_cost_nos ?: 'DCOST',
+            ]);
         }
     }
 }

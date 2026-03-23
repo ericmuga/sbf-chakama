@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class ProjectAttachment extends Model
 {
@@ -35,6 +36,21 @@ class ProjectAttachment extends Model
         }
 
         return $bytes.' B';
+    }
+
+    public function isImage(): bool
+    {
+        return str_starts_with((string) $this->mime_type, 'image/');
+    }
+
+    public function isPdf(): bool
+    {
+        return $this->mime_type === 'application/pdf';
+    }
+
+    public function viewUrl(): string
+    {
+        return Storage::disk('public')->url($this->file_path);
     }
 
     public function project(): BelongsTo

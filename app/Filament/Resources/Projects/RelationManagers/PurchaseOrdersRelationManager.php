@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Projects\RelationManagers;
 
+use App\Filament\Resources\Finance\PurchaseHeaders\PurchaseHeaderResource;
 use App\Models\Finance\PurchaseHeader;
+use Filament\Actions\Action;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -48,6 +50,22 @@ class PurchaseOrdersRelationManager extends RelationManager
             ])
             ->filters([
                 //
+            ])
+            ->headerActions([
+                Action::make('create_purchase_order')
+                    ->label('New Purchase Invoice')
+                    ->icon('heroicon-o-shopping-cart')
+                    ->url(fn (): string => PurchaseHeaderResource::getUrl('create', [
+                        'project' => $this->getOwnerRecord()->id,
+                    ])),
+            ])
+            ->recordActions([
+                Action::make('open_document')
+                    ->label('Open')
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->url(fn (PurchaseHeader $record): string => PurchaseHeaderResource::getUrl('edit', [
+                        'record' => $record,
+                    ])),
             ]);
     }
 }

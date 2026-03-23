@@ -25,10 +25,12 @@ class DatabaseSeeder extends Seeder
         $this->call([
             FinanceSeeder::class,
             ClaimNumberSeriesSeeder::class,
+            ProjectNumberSeriesSeeder::class,
             MpesaSetupSeeder::class,
             SampleMemberSeeder::class,
             ClaimsSeeder::class,
             DirectJournalServicesSeeder::class,
+            ProjectsDemoSeeder::class,
         ]);
     }
 }

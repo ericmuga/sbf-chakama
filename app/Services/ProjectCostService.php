@@ -10,6 +10,7 @@ use App\Events\DirectCostSubmitted;
 use App\Models\Finance\GlAccount;
 use App\Models\Finance\GlEntry;
 use App\Models\Finance\NumberSeries;
+use App\Models\Finance\PurchaseSetup;
 use App\Models\Project;
 use App\Models\ProjectDirectCost;
 use App\Models\User;
@@ -23,13 +24,11 @@ class ProjectCostService
     public function submitDirectCost(Project $project, array $data, User $submitter): ProjectDirectCost
     {
         return DB::transaction(function () use ($project, $data, $submitter) {
-            $no = NumberSeries::generate('DCOST');
+            $numberSeriesCode = PurchaseSetup::query()->value('direct_cost_nos') ?: 'DCOST';
+            $no = NumberSeries::generate($numberSeriesCode);
 
-            $receiptPath = null;
-            if (isset($data['receipt_file']) && $data['receipt_file']) {
-                $file = $data['receipt_file'];
-                $receiptPath = $file->store("project-receipts/{$project->no}", 'local');
-                unset($data['receipt_file']);
+            if (blank($no)) {
+                throw new RuntimeException('No active direct cost number series is configured.');
             }
 
             $cost = ProjectDirectCost::create(array_merge($data, [
@@ -37,8 +36,7 @@ class ProjectCostService
                 'project_id' => $project->id,
                 'status' => DirectCostStatus::Pending,
                 'submitted_by' => $submitter->id,
-                'number_series_code' => 'DCOST',
-                'receipt_path' => $receiptPath ?? $data['receipt_path'] ?? null,
+                'number_series_code' => $numberSeriesCode,
             ]));
 
             DirectCostSubmitted::dispatch($cost);
@@ -65,7 +63,6 @@ class ProjectCostService
         }
 
         DB::transaction(function () use ($cost, $poster) {
-            // Debit the expense GL account
             GlEntry::create([
                 'posting_date' => $cost->posting_date,
                 'document_no' => $cost->no,
@@ -78,7 +75,6 @@ class ProjectCostService
                 'created_by' => $poster->id,
             ]);
 
-            // Credit the bank or cash account
             $creditGlNo = $this->resolveCreditGlAccountNo($cost);
 
             GlEntry::create([
@@ -122,7 +118,6 @@ class ProjectCostService
         }
 
         DB::transaction(function () use ($cost, $user) {
-            // Reversing GL entries (swap debit/credit)
             GlEntry::create([
                 'posting_date' => now()->toDateString(),
                 'document_no' => $cost->no,

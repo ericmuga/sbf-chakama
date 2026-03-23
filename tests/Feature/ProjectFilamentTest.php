@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\DirectCostStatus;
 use App\Enums\DirectCostType;
+use App\Enums\ProjectMemberRole;
 use App\Enums\ProjectModule;
 use App\Enums\ProjectPriority;
 use App\Enums\ProjectStatus;
@@ -12,6 +13,7 @@ use App\Filament\Resources\Projects\Pages\ListProjects;
 use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Filament\Resources\Projects\RelationManagers\BudgetLinesRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\DirectCostsRelationManager;
+use App\Filament\Resources\Projects\RelationManagers\MilestonesRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\PurchaseOrdersRelationManager;
 use App\Models\Finance\GlAccount;
 use App\Models\Finance\NumberSeries;
@@ -19,11 +21,16 @@ use App\Models\Finance\PurchaseHeader;
 use App\Models\Finance\Vendor;
 use App\Models\Finance\VendorPostingGroup;
 use App\Models\Project;
+use App\Models\ProjectAttachment;
 use App\Models\ProjectBudgetLine;
+use App\Models\ProjectMilestone;
 use App\Models\User;
+use App\Notifications\AddedToProjectNotification;
 use App\Services\ProjectCostService;
 use App\Services\ProjectService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -96,8 +103,6 @@ class ProjectFilamentTest extends TestCase
         return [$vendor, $group];
     }
 
-    // ─── List & Create ────────────────────────────────────────────────────────
-
     public function test_admin_can_list_projects(): void
     {
         $project = $this->projectService->createProject($this->makeProjectData(), $this->admin);
@@ -148,8 +153,6 @@ class ProjectFilamentTest extends TestCase
             ->assertHasFormErrors(['name', 'module', 'budget']);
     }
 
-    // ─── List Filters ─────────────────────────────────────────────────────────
-
     public function test_module_filter_shows_only_matching_projects(): void
     {
         $sbf = $this->projectService->createProject(
@@ -185,8 +188,6 @@ class ProjectFilamentTest extends TestCase
             ->assertCanNotSeeTableRecords([$planning]);
     }
 
-    // ─── Status Change ────────────────────────────────────────────────────────
-
     public function test_valid_status_transition_from_view_page(): void
     {
         $project = $this->projectService->createProject($this->makeProjectData(), $this->admin);
@@ -212,7 +213,41 @@ class ProjectFilamentTest extends TestCase
             ->assertActionHidden('change_status');
     }
 
-    // ─── Direct Costs ─────────────────────────────────────────────────────────
+    public function test_view_project_can_add_milestone_from_header_action(): void
+    {
+        $project = $this->projectService->createProject($this->makeProjectData(), $this->admin);
+
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->callAction('add_milestone', [
+                'title' => 'Launch approvals',
+                'description' => 'All final approvals received.',
+                'due_date' => now()->addWeek()->toDateString(),
+                'sort_order' => 10,
+            ])
+            ->assertNotified();
+
+        $this->assertDatabaseHas('project_milestones', [
+            'project_id' => $project->id,
+            'title' => 'Launch approvals',
+        ]);
+    }
+
+    public function test_view_project_can_add_member_from_header_action_and_notify_user(): void
+    {
+        Notification::fake();
+
+        $project = $this->projectService->createProject($this->makeProjectData(), $this->admin);
+        $member = User::factory()->create();
+
+        Livewire::test(ViewProject::class, ['record' => $project->getRouteKey()])
+            ->callAction('add_member', [
+                'user_id' => $member->id,
+                'role' => ProjectMemberRole::Manager->value,
+            ])
+            ->assertNotified();
+
+        Notification::assertSentTo($member, AddedToProjectNotification::class);
+    }
 
     public function test_direct_cost_approve_then_post_flow(): void
     {
@@ -276,7 +311,34 @@ class ProjectFilamentTest extends TestCase
         $this->assertSame('Not budgeted', $cost->fresh()->rejection_reason);
     }
 
-    // ─── Purchase Orders ──────────────────────────────────────────────────────
+    public function test_direct_cost_void_action_reverses_posted_cost(): void
+    {
+        $glAccount = $this->createGlAccount();
+        GlAccount::create(['no' => 'CASH-001', 'name' => 'Cash', 'account_type' => 'Posting']);
+
+        $project = $this->projectService->createProject($this->makeProjectData(), $this->admin);
+
+        $costService = app(ProjectCostService::class);
+        $cost = $costService->submitDirectCost($project, [
+            'cost_type' => DirectCostType::PettyCash->value,
+            'description' => 'Temporary shelter materials',
+            'amount' => 1250,
+            'gl_account_no' => $glAccount->no,
+            'posting_date' => now()->toDateString(),
+        ], $this->admin);
+
+        $costService->approveDirectCost($cost, $this->admin);
+        $costService->postDirectCost($cost, $this->admin);
+
+        Livewire::test(DirectCostsRelationManager::class, [
+            'ownerRecord' => $project,
+            'pageClass' => ViewProject::class,
+        ])
+            ->callTableAction('void_cost', $cost->fresh())
+            ->assertNotified();
+
+        $this->assertSame(DirectCostStatus::Voided, $cost->fresh()->status);
+    }
 
     public function test_linked_purchase_orders_appear_in_relation_manager(): void
     {
@@ -324,7 +386,27 @@ class ProjectFilamentTest extends TestCase
             ->assertCanNotSeeTableRecords([$unlinked]);
     }
 
-    // ─── Budget vs Actual ─────────────────────────────────────────────────────
+    public function test_completed_milestone_can_be_reopened_from_relation_manager(): void
+    {
+        $project = $this->projectService->createProject($this->makeProjectData(), $this->admin);
+        $milestone = ProjectMilestone::create([
+            'project_id' => $project->id,
+            'title' => 'Close procurement',
+            'status' => 'completed',
+            'completed_at' => now(),
+            'sort_order' => 10,
+        ]);
+
+        Livewire::test(MilestonesRelationManager::class, [
+            'ownerRecord' => $project,
+            'pageClass' => ViewProject::class,
+        ])
+            ->callTableAction('reopen_milestone', $milestone)
+            ->assertNotified();
+
+        $this->assertSame('pending', $milestone->fresh()->status);
+        $this->assertNull($milestone->fresh()->completed_at);
+    }
 
     public function test_budget_lines_appear_in_relation_manager(): void
     {
@@ -344,6 +426,26 @@ class ProjectFilamentTest extends TestCase
             'pageClass' => ViewProject::class,
         ])
             ->assertCanSeeTableRecords([$line]);
+    }
+
+    public function test_project_attachment_view_url_uses_public_storage(): void
+    {
+        Storage::fake('public');
+
+        Storage::disk('public')->put('project-attachments/demo/brief.pdf', 'pdf');
+
+        $project = $this->projectService->createProject($this->makeProjectData(), $this->admin);
+        $attachment = ProjectAttachment::create([
+            'project_id' => $project->id,
+            'uploaded_by' => $this->admin->id,
+            'file_name' => 'brief.pdf',
+            'file_path' => 'project-attachments/demo/brief.pdf',
+            'file_size' => 3,
+            'mime_type' => 'application/pdf',
+        ]);
+
+        $this->assertStringContainsString('project-attachments/demo/brief.pdf', $attachment->viewUrl());
+        $this->assertTrue($attachment->isPdf());
     }
 
     public function test_get_budget_vs_actual_returns_correct_variance(): void
