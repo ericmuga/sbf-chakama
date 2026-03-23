@@ -61,7 +61,7 @@ class DatabaseSchemaTest extends TestCase
             NoSeries::class => 'bus_no_series',
             Member::class => 'bus_members',
             Vendor::class => 'bus_vendors',
-            Project::class => 'bus_projects',
+            Project::class => 'projects',
             SalesHeader::class => 'doc_sales_headers',
             SalesLine::class => 'doc_sales_lines',
             PostedSalesHeader::class => 'pst_sales_headers',

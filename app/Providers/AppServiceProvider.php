@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\Listeners\ClaimEventSubscriber;
+use App\Listeners\ProjectEventSubscriber;
+use App\Models\Project;
+use App\Observers\ProjectObserver;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +30,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         Event::subscribe(ClaimEventSubscriber::class);
+        Event::subscribe(ProjectEventSubscriber::class);
+        Project::observe(ProjectObserver::class);
     }
 
     /**
