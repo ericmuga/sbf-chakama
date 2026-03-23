@@ -152,4 +152,19 @@ class Member extends Model
     {
         return $this->hasOne(FinanceVendor::class, 'no', 'vendor_no');
     }
+
+    public function shareSubscriptions(): HasMany
+    {
+        return $this->hasMany(ShareSubscription::class);
+    }
+
+    public function nominees(): HasMany
+    {
+        return $this->hasMany(ShareNominee::class);
+    }
+
+    public function scopeChakamMembers(Builder $query): Builder
+    {
+        return $query->where('is_chakama', true);
+    }
 }

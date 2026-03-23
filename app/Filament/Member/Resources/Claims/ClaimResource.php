@@ -24,6 +24,11 @@ class ClaimResource extends Resource
 
     protected static ?string $navigationLabel = 'My Claims';
 
+    public static function shouldRegisterNavigation(array $parameters = []): bool
+    {
+        return auth()->user()?->member?->is_sbf ?? false;
+    }
+
     public static function getEloquentQuery(): Builder
     {
         $member = auth()->user()?->member;

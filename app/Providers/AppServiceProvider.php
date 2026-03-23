@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Listeners\ChakamaEventSubscriber;
 use App\Listeners\ClaimEventSubscriber;
 use App\Listeners\ProjectEventSubscriber;
 use App\Models\Project;
@@ -29,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        Event::subscribe(ChakamaEventSubscriber::class);
         Event::subscribe(ClaimEventSubscriber::class);
         Event::subscribe(ProjectEventSubscriber::class);
         Project::observe(ProjectObserver::class);
