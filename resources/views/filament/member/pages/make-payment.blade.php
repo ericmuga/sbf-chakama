@@ -52,6 +52,7 @@
                             wire:loading.attr="disabled"
                             color="success"
                             icon="heroicon-o-device-phone-mobile"
+                            size="sm"
                         >
                             <span wire:loading.remove wire:target="initiateSTKPush">Send STK Push</span>
                             <span wire:loading wire:target="initiateSTKPush">Sending…</span>
@@ -194,3 +195,4 @@
     @endif
 
 </x-filament-panels::page>
+

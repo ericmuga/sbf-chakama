@@ -10,8 +10,10 @@ use App\Exceptions\InvalidStatusTransitionException;
 use App\Models\Finance\GlEntry;
 use App\Models\Finance\NumberSeries;
 use App\Models\User;
+use App\Notifications\AddedToProjectNotification;
 use App\Services\ProjectService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class ProjectServiceTest extends TestCase
@@ -84,7 +86,6 @@ class ProjectServiceTest extends TestCase
 
         $this->expectException(InvalidStatusTransitionException::class);
 
-        // Draft → Completed is not allowed
         $this->service->changeStatus($project, ProjectStatus::Completed, $this->creator);
     }
 
@@ -112,6 +113,18 @@ class ProjectServiceTest extends TestCase
 
         $this->assertNotNull($member, 'Contributor should be a project member');
         $this->assertSame(ProjectMemberRole::Contributor, $member->pivot->role);
+    }
+
+    public function test_add_member_dispatches_assignment_notification(): void
+    {
+        Notification::fake();
+
+        $project = $this->service->createProject($this->makeProjectData(), $this->creator);
+        $contributor = User::factory()->create();
+
+        $this->service->addMember($project, $contributor, ProjectMemberRole::Contributor, $this->creator);
+
+        Notification::assertSentTo($contributor, AddedToProjectNotification::class);
     }
 
     public function test_cannot_remove_last_owner(): void

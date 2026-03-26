@@ -10,6 +10,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Storage;
@@ -33,8 +34,14 @@ class AttachmentsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('file_name')
             ->columns([
+                ImageColumn::make('file_path')
+                    ->label('Preview')
+                    ->disk('public')
+                    ->visibility('public')
+                    ->state(fn (ProjectAttachment $record): ?string => $record->isImage() ? $record->file_path : null),
                 TextColumn::make('file_name'),
-                TextColumn::make('mime_type'),
+                TextColumn::make('mime_type')
+                    ->badge(),
                 TextColumn::make('file_size')
                     ->label('Size')
                     ->state(fn (ProjectAttachment $record): string => $record->fileSizeHuman()),
@@ -53,14 +60,14 @@ class AttachmentsRelationManager extends RelationManager
                     ->schema([
                         FileUpload::make('file_path')
                             ->disk('public')
-                            ->directory('project-attachments')
+                            ->directory(fn (): string => 'project-attachments/'.$this->getOwnerRecord()->no)
                             ->visibility('public')
+                            ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
                             ->required(),
                     ])
                     ->action(function (array $data): void {
                         $path = $data['file_path'];
                         $disk = Storage::disk('public');
-                        $fullPath = $disk->path($path);
                         $fileName = basename($path);
                         $fileSize = $disk->size($path);
                         $mimeType = $disk->mimeType($path);
@@ -76,6 +83,10 @@ class AttachmentsRelationManager extends RelationManager
                     }),
             ])
             ->recordActions([
+                Action::make('view')
+                    ->icon('heroicon-o-eye')
+                    ->url(fn (ProjectAttachment $record): string => $record->viewUrl())
+                    ->openUrlInNewTab(),
                 DeleteAction::make(),
             ])
             ->toolbarActions([

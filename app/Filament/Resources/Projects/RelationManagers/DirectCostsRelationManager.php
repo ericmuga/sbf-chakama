@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Projects\RelationManagers;
 use App\Enums\DirectCostStatus;
 use App\Enums\DirectCostType;
 use App\Models\Finance\GlAccount;
+use App\Models\Finance\Vendor;
 use App\Models\ProjectDirectCost;
 use App\Services\ProjectCostService;
 use Filament\Actions\Action;
@@ -13,6 +14,7 @@ use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -24,6 +26,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
 
 class DirectCostsRelationManager extends RelationManager
 {
@@ -73,21 +76,38 @@ class DirectCostsRelationManager extends RelationManager
                             ->required()
                             ->minValue(0),
                         Select::make('cost_type')
-                            ->options(DirectCostType::class),
+                            ->options(DirectCostType::class)
+                            ->default(DirectCostType::Other->value)
+                            ->required(),
                         Select::make('gl_account_no')
                             ->label('GL Account')
                             ->options(
                                 GlAccount::query()
                                     ->where('account_type', 'Posting')
-                                    ->pluck('no', 'no')
+                                    ->orderBy('no')
+                                    ->get()
+                                    ->mapWithKeys(fn (GlAccount $account): array => [$account->no => $account->no.' - '.$account->name])
                             )
+                            ->searchable()
+                            ->required(),
+                        Select::make('vendor_id')
+                            ->label('Vendor')
+                            ->options(Vendor::query()->orderBy('name')->pluck('name', 'id'))
                             ->searchable(),
                         Select::make('bank_account_id')
                             ->relationship('bankAccount', 'name')
                             ->searchable()
                             ->nullable(),
+                        TextInput::make('receipt_number')
+                            ->maxLength(100),
+                        FileUpload::make('receipt_path')
+                            ->disk('public')
+                            ->directory('project-receipts/'.$this->getOwnerRecord()->no)
+                            ->visibility('public')
+                            ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png']),
                         DatePicker::make('posting_date')
-                            ->default(today()),
+                            ->default(today())
+                            ->required(),
                     ])
                     ->using(function (array $data): ProjectDirectCost {
                         return app(ProjectCostService::class)->submitDirectCost(
@@ -108,11 +128,20 @@ class DirectCostsRelationManager extends RelationManager
                             TextEntry::make('gl_account_no')->label('GL Account'),
                             TextEntry::make('status')->badge(),
                             TextEntry::make('posting_date')->date(),
+                            TextEntry::make('receipt_number'),
+                            TextEntry::make('rejection_reason')
+                                ->columnSpanFull(),
                             TextEntry::make('submitter.name')->label('Submitted By'),
                             TextEntry::make('approver.name')->label('Approved By'),
                             TextEntry::make('approved_at')->dateTime(),
                         ])->columns(2),
                     ]),
+                Action::make('view_receipt')
+                    ->label('View Receipt')
+                    ->icon('heroicon-o-eye')
+                    ->visible(fn (ProjectDirectCost $record): bool => filled($record->receipt_path))
+                    ->url(fn (ProjectDirectCost $record): string => Storage::disk('public')->url($record->receipt_path))
+                    ->openUrlInNewTab(),
                 Action::make('approve')
                     ->color('success')
                     ->icon('heroicon-o-check-circle')
@@ -142,6 +171,16 @@ class DirectCostsRelationManager extends RelationManager
                     ->action(function (ProjectDirectCost $record, array $data): void {
                         app(ProjectCostService::class)->rejectDirectCost($record, auth()->user(), $data['reason']);
                         Notification::make()->warning()->title('Direct cost rejected.')->send();
+                    }),
+                Action::make('void_cost')
+                    ->label('Void')
+                    ->color('gray')
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->visible(fn (ProjectDirectCost $record): bool => $record->status === DirectCostStatus::Posted)
+                    ->requiresConfirmation()
+                    ->action(function (ProjectDirectCost $record): void {
+                        app(ProjectCostService::class)->voidDirectCost($record, auth()->user());
+                        Notification::make()->success()->title('Direct cost voided.')->send();
                     }),
             ])
             ->toolbarActions([

@@ -27,10 +27,12 @@ class DatabaseSeeder extends Seeder
             ClaimNumberSeriesSeeder::class,
             ChakamNumberSeriesSeeder::class,
             ChakamDataSeeder::class,
+            ProjectNumberSeriesSeeder::class,
             MpesaSetupSeeder::class,
             SampleMemberSeeder::class,
             ClaimsSeeder::class,
             DirectJournalServicesSeeder::class,
+            ProjectsDemoSeeder::class,
         ]);
     }
 }

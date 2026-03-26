@@ -10,6 +10,7 @@ use App\Events\ProjectStatusChanged;
 use App\Exceptions\InvalidStatusTransitionException;
 use App\Models\Finance\GlEntry;
 use App\Models\Finance\NumberSeries;
+use App\Models\Finance\PurchaseSetup;
 use App\Models\Project;
 use App\Models\ProjectStatusHistory;
 use App\Models\User;
@@ -22,13 +23,18 @@ class ProjectService
     public function createProject(array $data, User $creator): Project
     {
         return DB::transaction(function () use ($data, $creator) {
-            $no = NumberSeries::generate('PROJ');
+            $numberSeriesCode = PurchaseSetup::query()->value('project_nos') ?: 'PROJ';
+            $no = NumberSeries::generate($numberSeriesCode);
+
+            if (blank($no)) {
+                throw new \RuntimeException('No active project number series is configured.');
+            }
 
             $project = Project::create(array_merge($data, [
                 'no' => $no,
                 'slug' => Str::slug($data['name']).'-'.time(),
                 'status' => ProjectStatus::Draft,
-                'number_series_code' => 'PROJ',
+                'number_series_code' => $numberSeriesCode,
                 'created_by' => $creator->id,
             ]));
 
@@ -106,6 +112,20 @@ class ProjectService
 
     public function addMember(Project $project, User $user, ProjectMemberRole $role, User $assigner): void
     {
+        $existingMember = $project->members()
+            ->where('users.id', $user->id)
+            ->exists();
+
+        if ($existingMember) {
+            $project->members()->updateExistingPivot($user->id, [
+                'role' => $role->value,
+                'assigned_at' => now(),
+                'assigned_by' => $assigner->id,
+            ]);
+
+            return;
+        }
+
         $project->members()->attach($user->id, [
             'role' => $role->value,
             'assigned_at' => now(),
