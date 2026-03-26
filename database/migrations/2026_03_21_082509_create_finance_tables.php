@@ -234,7 +234,7 @@ return new class extends Migration
 
         Schema::create('detailed_customer_ledger_entries', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_ledger_entry_id')->constrained('customer_ledger_entries')->cascadeOnDelete();
+            $table->foreignId('customer_ledger_entry_id')->constrained('customer_ledger_entries', 'id', 'dcle_cle_id_foreign')->cascadeOnDelete();
             $table->unsignedBigInteger('applied_entry_id')->nullable()->index();
             $table->string('document_no', 50)->index();
             $table->date('posting_date');
