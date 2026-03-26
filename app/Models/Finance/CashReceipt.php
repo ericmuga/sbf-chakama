@@ -2,12 +2,13 @@
 
 namespace App\Models\Finance;
 
+use App\Models\ShareSubscription;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['no', 'number_series_code', 'customer_id', 'bank_account_id', 'payment_method_id', 'posting_date', 'amount', 'description', 'mpesa_receipt_no', 'mpesa_phone', 'status'])]
+#[Fillable(['no', 'number_series_code', 'customer_id', 'bank_account_id', 'payment_method_id', 'posting_date', 'amount', 'description', 'mpesa_receipt_no', 'mpesa_phone', 'status', 'share_subscription_id'])]
 class CashReceipt extends Model
 {
     use HasFactory;
@@ -40,6 +41,11 @@ class CashReceipt extends Model
     public function paymentMethod(): BelongsTo
     {
         return $this->belongsTo(PaymentMethod::class);
+    }
+
+    public function shareSubscription(): BelongsTo
+    {
+        return $this->belongsTo(ShareSubscription::class);
     }
 
     protected static function booted(): void

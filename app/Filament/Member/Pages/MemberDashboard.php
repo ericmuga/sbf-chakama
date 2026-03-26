@@ -5,13 +5,12 @@ namespace App\Filament\Member\Pages;
 use App\Filament\Member\Widgets\MemberStatsOverview;
 use App\Filament\Member\Widgets\RecentClaimsWidget;
 use App\Filament\Member\Widgets\RecentPaymentsWidget;
+use App\Filament\Member\Widgets\ShareSummaryWidget;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 
 class MemberDashboard extends Page
 {
-    protected string $view = 'filament.member.pages.member-dashboard';
-
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedHome;
 
     protected static ?string $navigationLabel = 'Dashboard';
@@ -22,25 +21,41 @@ class MemberDashboard extends Page
 
     public function getWidgets(): array
     {
-        return [
-            MemberStatsOverview::class,
-            RecentClaimsWidget::class,
-            RecentPaymentsWidget::class,
-        ];
+        return array_merge(
+            $this->getHeaderWidgets(),
+            $this->getFooterWidgets(),
+        );
     }
 
     public function getHeaderWidgets(): array
     {
-        return [
-            MemberStatsOverview::class,
-        ];
+        $member = auth()->user()?->member;
+
+        $widgets = [];
+
+        if ($member?->is_sbf) {
+            $widgets[] = MemberStatsOverview::class;
+        }
+
+        if ($member?->is_chakama) {
+            $widgets[] = ShareSummaryWidget::class;
+        }
+
+        return $widgets;
     }
 
     public function getFooterWidgets(): array
     {
-        return [
-            RecentClaimsWidget::class,
-            RecentPaymentsWidget::class,
-        ];
+        $member = auth()->user()?->member;
+
+        $widgets = [];
+
+        if ($member?->is_sbf) {
+            $widgets[] = RecentClaimsWidget::class;
+        }
+
+        $widgets[] = RecentPaymentsWidget::class;
+
+        return $widgets;
     }
 }
