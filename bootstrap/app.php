@@ -1,7 +1,10 @@
 <?php
 
 use App\Console\Commands\CheckOverdueProjects;
+use App\Console\Commands\CheckOverdueSharePayments;
+use App\Console\Commands\GenerateShareInvoices;
 use App\Console\Commands\MemberPaymentReminders;
+use App\Console\Commands\RecalculateFundBalances;
 use App\Console\Commands\RecalculateProjectSpent;
 use App\Console\Commands\RemindApprovers;
 use Illuminate\Console\Scheduling\Schedule;
@@ -21,6 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command(MemberPaymentReminders::class)->weeklyOn(1, '08:00');
         $schedule->command(CheckOverdueProjects::class)->dailyAt('08:00');
         $schedule->command(RecalculateProjectSpent::class)->weeklyOn(0, '00:00');
+        $schedule->command(GenerateShareInvoices::class)->dailyAt('06:00');
+        $schedule->command(CheckOverdueSharePayments::class)->weeklyOn(1, '08:00');
+        $schedule->command(RecalculateFundBalances::class)->weeklyOn(0, '00:00');
     })
     ->withMiddleware(function (Middleware $middleware): void {
         //

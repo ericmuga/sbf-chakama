@@ -25,6 +25,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             FinanceSeeder::class,
             ClaimNumberSeriesSeeder::class,
+            ChakamNumberSeriesSeeder::class,
+            ChakamDataSeeder::class,
             ProjectNumberSeriesSeeder::class,
             MpesaSetupSeeder::class,
             SampleMemberSeeder::class,

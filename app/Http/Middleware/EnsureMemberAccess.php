@@ -19,7 +19,7 @@ class EnsureMemberAccess
 
         $member = $request->user()->member;
 
-        if (! $member || ! $member->is_sbf) {
+        if (! $member || (! $member->is_sbf && ! $member->is_chakama)) {
             abort(403, 'You do not have member portal access.');
         }
 
