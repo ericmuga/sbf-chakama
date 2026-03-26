@@ -61,7 +61,7 @@ return new class extends Migration
             $table->foreignId('service_posting_group_id')->constrained('service_posting_groups');
             $table->string('sales_account_no', 50);
             $table->timestamps();
-            $table->unique(['customer_posting_group_id', 'service_posting_group_id']);
+            $table->unique(['customer_posting_group_id', 'service_posting_group_id'], 'gps_cpg_spg_unique');
         });
 
         Schema::create('payment_terms', function (Blueprint $table) {

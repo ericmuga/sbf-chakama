@@ -11,8 +11,6 @@ use Filament\Support\Icons\Heroicon;
 
 class MemberDashboard extends Page
 {
-    protected string $view = 'filament.member.pages.member-dashboard';
-
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedHome;
 
     protected static ?string $navigationLabel = 'Dashboard';
