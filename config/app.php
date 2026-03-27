@@ -15,6 +15,10 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    // Entity subdomain config — null means path-based routing (local dev)
+    'chakama_domain' => env('CHAKAMA_DOMAIN'),
+    'sbf_domain' => env('SBF_DOMAIN'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment
