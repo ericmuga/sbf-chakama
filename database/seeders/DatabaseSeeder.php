@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             ProjectNumberSeriesSeeder::class,
             MpesaSetupSeeder::class,
             SampleMemberSeeder::class,
+            EntityUsersSeeder::class,
             ClaimsSeeder::class,
             DirectJournalServicesSeeder::class,
             ProjectsDemoSeeder::class,

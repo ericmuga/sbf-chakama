@@ -2,9 +2,10 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Pages\SystemPage;
-use App\Filament\Resources\ClaimApprovalTemplates\ClaimApprovalTemplateResource;
-use App\Filament\Resources\Claims\ClaimResource;
+use App\Filament\Resources\Chakama\FundAccountResource;
+use App\Filament\Resources\Chakama\FundWithdrawalResource;
+use App\Filament\Resources\Chakama\ShareBillingScheduleResource;
+use App\Filament\Resources\Chakama\ShareSubscriptionResource;
 use App\Filament\Resources\Finance\BankAccounts\BankAccountResource;
 use App\Filament\Resources\Finance\BankLedgerEntries\BankLedgerEntryResource;
 use App\Filament\Resources\Finance\CashReceipts\CashReceiptResource;
@@ -13,17 +14,10 @@ use App\Filament\Resources\Finance\CustomerPostingGroups\CustomerPostingGroupRes
 use App\Filament\Resources\Finance\CustomerResource;
 use App\Filament\Resources\Finance\DirectExpenses\DirectExpenseResource;
 use App\Filament\Resources\Finance\DirectIncomes\DirectIncomeResource;
-use App\Filament\Resources\Finance\GeneralPostingSetups\GeneralPostingSetupResource;
 use App\Filament\Resources\Finance\GlAccounts\GlAccountResource;
 use App\Filament\Resources\Finance\GlEntries\GlEntryResource;
-use App\Filament\Resources\Finance\MpesaSetup\MpesaSetupPage;
 use App\Filament\Resources\Finance\NumberSeries\NumberSeriesResource;
 use App\Filament\Resources\Finance\PaymentMethods\PaymentMethodResource;
-use App\Filament\Resources\Finance\PurchaseHeaders\PurchaseHeaderResource;
-use App\Filament\Resources\Finance\PurchaseSetups\PurchaseSetupResource;
-use App\Filament\Resources\Finance\SalesHeaders\SalesHeaderResource;
-use App\Filament\Resources\Finance\SalesSetups\SalesSetupResource;
-use App\Filament\Resources\Finance\ScheduledInvoices\ScheduledInvoiceResource;
 use App\Filament\Resources\Finance\ServicePostingGroups\ServicePostingGroupResource;
 use App\Filament\Resources\Finance\Services\ServiceResource;
 use App\Filament\Resources\Finance\VendorLedgerEntries\VendorLedgerEntryResource;
@@ -31,9 +25,7 @@ use App\Filament\Resources\Finance\VendorPayments\VendorPaymentResource;
 use App\Filament\Resources\Finance\VendorPostingGroups\VendorPostingGroupResource;
 use App\Filament\Resources\Finance\Vendors\VendorResource;
 use App\Filament\Resources\Members\MemberResource;
-use App\Filament\Resources\Projects\ProjectResource;
 use App\Filament\Resources\UserResource;
-use App\Filament\Widgets\DepositsChart;
 use App\Filament\Widgets\FinanceStatsOverview;
 use App\Filament\Widgets\LatestNotificationsWidget;
 use Filament\Http\Middleware\Authenticate;
@@ -52,60 +44,57 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-class AdminPanelProvider extends PanelProvider
+class ChakamaPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->default()
-            ->id('sbf')
-            ->path('admin')
-            ->domain(config('app.sbf_domain'))
+            ->id('chakama')
+            ->path('chakama')
+            ->domain(config('app.chakama_domain'))
             ->login()
-            ->brandName('SOBA Benevolent Fund')
+            ->brandName('Chakama Ranch')
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Emerald,
             ])
             ->resources([
-                UserResource::class,
+                // Members
                 MemberResource::class,
-                ClaimResource::class,
-                ClaimApprovalTemplateResource::class,
-                BankAccountResource::class,
+                UserResource::class,
+                // Chakama — Shares & Funds
+                ShareSubscriptionResource::class,
+                ShareBillingScheduleResource::class,
+                FundAccountResource::class,
+                FundWithdrawalResource::class,
+                // Finance
+                CashReceiptResource::class,
                 DirectExpenseResource::class,
                 DirectIncomeResource::class,
-                CashReceiptResource::class,
+                BankAccountResource::class,
                 BankLedgerEntryResource::class,
                 CustomerLedgerEntryResource::class,
                 CustomerPostingGroupResource::class,
                 CustomerResource::class,
-                GeneralPostingSetupResource::class,
                 GlAccountResource::class,
                 GlEntryResource::class,
                 NumberSeriesResource::class,
                 PaymentMethodResource::class,
-                PurchaseHeaderResource::class,
-                PurchaseSetupResource::class,
-                ScheduledInvoiceResource::class,
-                SalesHeaderResource::class,
-                SalesSetupResource::class,
                 ServicePostingGroupResource::class,
                 ServiceResource::class,
                 VendorLedgerEntryResource::class,
                 VendorPaymentResource::class,
                 VendorPostingGroupResource::class,
                 VendorResource::class,
-                ProjectResource::class,
             ])
             ->pages([
                 Dashboard::class,
-                MpesaSetupPage::class,
-                SystemPage::class,
             ])
             ->navigationGroups([
-                NavigationGroup::make('Project Management'),
+                NavigationGroup::make('Chakama — Shares'),
+                NavigationGroup::make('Chakama — Funds'),
+                NavigationGroup::make('Chakama — Settings'),
                 NavigationGroup::make('Finance — Income & Deposits'),
-                NavigationGroup::make('Finance — Expenses & Claims'),
+                NavigationGroup::make('Finance — Expenses & Payments'),
                 NavigationGroup::make('Finance — Ledgers'),
                 NavigationGroup::make('Finance — Setup'),
                 NavigationGroup::make('Administration'),
@@ -113,7 +102,6 @@ class AdminPanelProvider extends PanelProvider
             ->databaseNotifications()
             ->widgets([
                 FinanceStatsOverview::class,
-                DepositsChart::class,
                 LatestNotificationsWidget::class,
             ])
             ->middleware([

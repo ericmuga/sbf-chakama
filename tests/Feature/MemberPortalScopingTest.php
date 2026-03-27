@@ -62,7 +62,7 @@ class MemberPortalScopingTest extends TestCase
 
         $this->actingAs($user);
 
-        $this->get(route('filament.admin.pages.dashboard'))
+        $this->get(route('filament.sbf.pages.dashboard'))
             ->assertOk();
     }
 
@@ -72,7 +72,7 @@ class MemberPortalScopingTest extends TestCase
 
         $this->actingAs($user);
 
-        $this->get(route('filament.admin.pages.dashboard'))
+        $this->get(route('filament.sbf.pages.dashboard'))
             ->assertForbidden();
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Providers\Filament;
 
-use App\Http\Middleware\EnsureMemberAccess;
+use App\Http\Middleware\EnsureChakamaMemberAccess;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -17,23 +17,32 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-class MemberPanelProvider extends PanelProvider
+class ChakamaMemberPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->id('member')
-            ->path('portal')
-            ->domain(config('app.sbf_domain'))
+            ->id('chakama-portal')
+            ->path('chakama-portal')
+            ->domain(config('app.chakama_domain'))
             ->login()
-            ->brandName('SOBA Benevolent Fund — Member Portal')
+            ->brandName('Chakama Ranch — Member Portal')
             ->colors([
-                'primary' => Color::Indigo,
+                'primary' => Color::Emerald,
             ])
             ->databaseNotifications()
-            ->discoverResources(in: app_path('Filament/Member/Resources'), for: 'App\Filament\Member\Resources')
-            ->discoverPages(in: app_path('Filament/Member/Pages'), for: 'App\Filament\Member\Pages')
-            ->discoverWidgets(in: app_path('Filament/Member/Widgets'), for: 'App\Filament\Member\Widgets')
+            ->discoverResources(
+                in: app_path('Filament/Member/Resources'),
+                for: 'App\Filament\Member\Resources'
+            )
+            ->discoverPages(
+                in: app_path('Filament/Member/Pages'),
+                for: 'App\Filament\Member\Pages'
+            )
+            ->discoverWidgets(
+                in: app_path('Filament/Member/Widgets'),
+                for: 'App\Filament\Member\Widgets'
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -47,7 +56,7 @@ class MemberPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-                EnsureMemberAccess::class,
+                EnsureChakamaMemberAccess::class,
             ]);
     }
 }
