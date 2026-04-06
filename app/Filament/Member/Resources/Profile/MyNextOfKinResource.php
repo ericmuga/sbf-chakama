@@ -31,12 +31,16 @@ class MyNextOfKinResource extends Resource
 
     public static function shouldRegisterNavigation(array $parameters = []): bool
     {
-        return auth()->user()?->member?->is_chakama ?? false;
+        $member = auth()->user()?->member;
+
+        return ($member?->is_chakama || $member?->is_sbf) ?? false;
     }
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->member?->is_chakama ?? false;
+        $member = auth()->user()?->member;
+
+        return ($member?->is_chakama || $member?->is_sbf) ?? false;
     }
 
     public static function getEloquentQuery(): Builder

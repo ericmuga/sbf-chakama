@@ -43,10 +43,20 @@ class MemberProfileTest extends TestCase
             ->assertOk();
     }
 
-    public function test_non_chakama_member_cannot_access_my_dependants_page(): void
+    public function test_sbf_only_member_can_access_my_dependants_page(): void
     {
         $user = User::factory()->create();
         Member::factory()->for($user)->create(['is_chakama' => false, 'is_sbf' => true]);
+        $this->actingAs($user);
+
+        $this->get(route('filament.member.resources.profile.my-dependants.index'))
+            ->assertOk();
+    }
+
+    public function test_non_member_user_cannot_access_my_dependants_page(): void
+    {
+        $user = User::factory()->create();
+        Member::factory()->for($user)->create(['is_chakama' => false, 'is_sbf' => false]);
         $this->actingAs($user);
 
         $this->get(route('filament.member.resources.profile.my-dependants.index'))
@@ -90,10 +100,20 @@ class MemberProfileTest extends TestCase
             ->assertOk();
     }
 
-    public function test_non_chakama_member_cannot_access_my_next_of_kin_page(): void
+    public function test_sbf_only_member_can_access_my_next_of_kin_page(): void
     {
         $user = User::factory()->create();
         Member::factory()->for($user)->create(['is_chakama' => false, 'is_sbf' => true]);
+        $this->actingAs($user);
+
+        $this->get(route('filament.member.resources.profile.my-next-of-kin.index'))
+            ->assertOk();
+    }
+
+    public function test_non_member_user_cannot_access_my_next_of_kin_page(): void
+    {
+        $user = User::factory()->create();
+        Member::factory()->for($user)->create(['is_chakama' => false, 'is_sbf' => false]);
         $this->actingAs($user);
 
         $this->get(route('filament.member.resources.profile.my-next-of-kin.index'))

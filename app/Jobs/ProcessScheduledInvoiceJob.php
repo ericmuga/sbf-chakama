@@ -23,13 +23,18 @@ class ProcessScheduledInvoiceJob implements ShouldQueue
 
     public function handle(SalesPostingService $postingService): void
     {
-        $invoice = ScheduledInvoice::findOrFail($this->scheduledInvoiceId);
+        // Atomically transition from 'draft' to 'processing' to prevent duplicate runs
+        $affected = ScheduledInvoice::where('id', $this->scheduledInvoiceId)
+            ->where('status', 'draft')
+            ->update(['status' => 'processing']);
 
-        if (! $invoice->isProcessable()) {
+        if ($affected === 0) {
+            Log::info("ScheduledInvoice #{$this->scheduledInvoiceId} skipped — already processing or completed.");
+
             return;
         }
 
-        $invoice->update(['status' => 'processing']);
+        $invoice = ScheduledInvoice::findOrFail($this->scheduledInvoiceId);
 
         $members = Member::query()
             ->members()

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\EntityDimension;
 use App\Models\Claim;
 use App\Models\Member;
 use App\Models\User;
@@ -29,10 +30,43 @@ class MemberPortalScopingTest extends TestCase
             ->assertDontSee($otherClaim->no);
     }
 
-    public function test_non_sbf_member_cannot_access_portal(): void
+    public function test_sbf_member_can_access_unified_portal(): void
     {
         $user = User::factory()->create();
-        Member::factory()->for($user)->create(['is_sbf' => false]);
+        Member::factory()->for($user)->create(['is_sbf' => true, 'is_chakama' => false]);
+
+        $this->actingAs($user);
+
+        $this->get(route('filament.member.pages.member-dashboard'))
+            ->assertOk();
+    }
+
+    public function test_chakama_only_member_can_access_unified_portal(): void
+    {
+        $user = User::factory()->create();
+        Member::factory()->for($user)->create(['is_sbf' => false, 'is_chakama' => true]);
+
+        $this->actingAs($user);
+
+        $this->get(route('filament.member.pages.member-dashboard'))
+            ->assertOk();
+    }
+
+    public function test_dual_member_can_access_unified_portal(): void
+    {
+        $user = User::factory()->create();
+        Member::factory()->for($user)->create(['is_sbf' => true, 'is_chakama' => true]);
+
+        $this->actingAs($user);
+
+        $this->get(route('filament.member.pages.member-dashboard'))
+            ->assertOk();
+    }
+
+    public function test_non_member_user_cannot_access_portal(): void
+    {
+        $user = User::factory()->create();
+        Member::factory()->for($user)->create(['is_sbf' => false, 'is_chakama' => false]);
 
         $this->actingAs($user);
 
@@ -56,14 +90,44 @@ class MemberPortalScopingTest extends TestCase
             ->assertRedirect(route('filament.member.auth.login'));
     }
 
-    public function test_admin_can_access_admin_panel(): void
+    public function test_sbf_admin_can_access_sbf_admin_panel(): void
     {
-        $user = User::factory()->create(['is_admin' => true]);
+        $user = User::factory()->create(['is_admin' => true, 'entity' => null]);
 
         $this->actingAs($user);
 
         $this->get(route('filament.sbf.pages.dashboard'))
             ->assertOk();
+    }
+
+    public function test_chakama_admin_can_access_chakama_admin_panel(): void
+    {
+        $user = User::factory()->create(['is_admin' => true, 'entity' => EntityDimension::Chakama]);
+
+        $this->actingAs($user);
+
+        $this->get(route('filament.chakama.pages.dashboard'))
+            ->assertOk();
+    }
+
+    public function test_sbf_admin_cannot_access_chakama_admin_panel(): void
+    {
+        $user = User::factory()->create(['is_admin' => true, 'entity' => null]);
+
+        $this->actingAs($user);
+
+        $this->get(route('filament.chakama.pages.dashboard'))
+            ->assertForbidden();
+    }
+
+    public function test_chakama_admin_cannot_access_sbf_admin_panel(): void
+    {
+        $user = User::factory()->create(['is_admin' => true, 'entity' => EntityDimension::Chakama]);
+
+        $this->actingAs($user);
+
+        $this->get(route('filament.sbf.pages.dashboard'))
+            ->assertForbidden();
     }
 
     public function test_non_admin_cannot_access_admin_panel(): void

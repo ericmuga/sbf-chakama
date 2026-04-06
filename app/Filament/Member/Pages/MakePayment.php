@@ -8,6 +8,7 @@ use App\Models\Finance\CashReceipt;
 use App\Models\Finance\CustomerLedgerEntry;
 use App\Models\Finance\MpesaTransaction;
 use App\Models\Finance\PaymentMethod;
+use App\Models\Finance\SalesHeader;
 use App\Services\Finance\MpesaService;
 use App\Services\Finance\ReceiptPostingService;
 use Carbon\Carbon;
@@ -53,8 +54,10 @@ class MakePayment extends Page
 
     public ?string $confirmedAt = null;
 
-    /** @var array<int, array{id: int, document_no: string, due_date: string, remaining_amount: float, amount_applied: string}> */
+    /** @var array<int, array{id: int, document_no: string, due_date: string, remaining_amount: float, amount_applied: string, module: string}> */
     public array $openInvoices = [];
+
+    public bool $showChakamaBills = false;
 
     public function mount(): void
     {
@@ -71,6 +74,11 @@ class MakePayment extends Page
             }
 
             $this->phone = $phone;
+
+            // Default: show Chakama bills for members who are only Chakama
+            if ($member->is_chakama && ! $member->is_sbf) {
+                $this->showChakamaBills = true;
+            }
         }
     }
 
@@ -165,9 +173,19 @@ class MakePayment extends Page
             ->first();
     }
 
+    public function toggleChakamaBills(): void
+    {
+        $this->showChakamaBills = ! $this->showChakamaBills;
+
+        if ($this->step === 'confirmed') {
+            $this->loadOpenInvoices();
+        }
+    }
+
     private function loadOpenInvoices(): void
     {
         $customer = auth()->user()?->member?->financeCustomer;
+        $member = auth()->user()?->member;
 
         if (! $customer) {
             return;
@@ -179,6 +197,14 @@ class MakePayment extends Page
             ->where('remaining_amount', '>', 0)
             ->orderBy('due_date')
             ->get();
+
+        // For dual-module members, filter by module when Chakama bills are hidden
+        if ($member?->is_sbf && $member?->is_chakama && ! $this->showChakamaBills) {
+            $chakamDocNos = SalesHeader::whereNotNull('share_subscription_id')
+                ->pluck('no')
+                ->all();
+            $entries = $entries->filter(fn ($e) => ! in_array($e->document_no, $chakamDocNos));
+        }
 
         $remaining = (float) $this->confirmedAmount;
 
@@ -194,7 +220,7 @@ class MakePayment extends Page
                 'remaining_amount' => $due,
                 'amount_applied' => $applied > 0 ? (string) $applied : '',
             ];
-        })->toArray();
+        })->values()->toArray();
     }
 
     public function postPayment(): void

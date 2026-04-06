@@ -24,6 +24,8 @@ class ClaimResource extends Resource
 
     protected static ?string $navigationLabel = 'My Claims';
 
+    protected static \UnitEnum|string|null $navigationGroup = 'SBF';
+
     public static function shouldRegisterNavigation(array $parameters = []): bool
     {
         return auth()->user()?->member?->is_sbf ?? false;

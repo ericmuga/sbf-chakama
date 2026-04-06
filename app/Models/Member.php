@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Facades\Hash;
 
 #[Fillable(['no', 'user_id', 'identity_no', 'identity_type', 'phone', 'member_status', 'is_chakama', 'is_sbf', 'customer_no', 'vendor_no', 'name', 'type', 'member_id', 'email', 'date_of_birth', 'relationship', 'contact_preference', 'bank_name', 'bank_account_name', 'bank_account_no', 'bank_branch', 'mpesa_phone', 'preferred_payment_method', 'exclude_from_billing'])]
 class Member extends Model
@@ -50,6 +51,21 @@ class Member extends Model
         });
 
         static::created(function (Member $member) {
+            if (empty($member->user_id) && filled($member->email)) {
+                $existingUser = User::where('email', $member->email)->first();
+
+                if ($existingUser) {
+                    $member->updateQuietly(['user_id' => $existingUser->id]);
+                } else {
+                    $user = User::create([
+                        'name' => $member->name ?? $member->no,
+                        'email' => $member->email,
+                        'password' => Hash::make('password'),
+                    ]);
+                    $member->updateQuietly(['user_id' => $user->id]);
+                }
+            }
+
             $salesSetup = SalesSetup::first();
             $purchaseSetup = PurchaseSetup::first();
             $cpg = CustomerPostingGroup::where('code', 'MEMBER')->first();

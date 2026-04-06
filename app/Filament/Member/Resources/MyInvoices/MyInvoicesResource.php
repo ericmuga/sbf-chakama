@@ -21,6 +21,8 @@ class MyInvoicesResource extends Resource
 
     protected static ?string $navigationLabel = 'My Bills';
 
+    protected static \UnitEnum|string|null $navigationGroup = 'My Finances';
+
     protected static ?string $modelLabel = 'Invoice';
 
     protected static ?string $pluralModelLabel = 'Pending Bills';
