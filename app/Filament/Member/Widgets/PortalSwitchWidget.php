@@ -15,9 +15,7 @@ class PortalSwitchWidget extends Widget
 
     public static function canView(): bool
     {
-        $member = auth()->user()?->member;
-
-        return $member?->is_chakama && $member?->is_sbf;
+        return false;
     }
 
     public function getOtherPortalLabel(): string

@@ -2,15 +2,18 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\EntityDimension;
 use App\Filament\Resources\UserResource\Pages\CreateUser;
 use App\Filament\Resources\UserResource\Pages\EditUser;
 use App\Filament\Resources\UserResource\Pages\ListUsers;
+use App\Models\Member;
 use App\Models\User;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
@@ -52,17 +55,54 @@ class UserResource extends Resource
                             ->maxLength(255),
                         Toggle::make('is_admin')
                             ->label('Admin user')
-                            ->inline(false),
+                            ->inline(false)
+                            ->live(),
+                        Select::make('entity')
+                            ->label('Admin module')
+                            ->options(EntityDimension::class)
+                            ->placeholder('— SBF (default) —')
+                            ->helperText('Controls which admin panel this admin can access. Leave blank for SBF access.')
+                            ->visible(fn (Get $get): bool => (bool) $get('is_admin')),
                     ])
                     ->columns(2),
+                Toggle::make('has_member_profile')
+                    ->label('Attach member profile')
+                    ->helperText('Enable to create or update a member profile linked to this user account.')
+                    ->live()
+                    ->inline(false),
                 Section::make('Member profile')
-                    ->relationship('member')
                     ->schema([
-                        TextInput::make('no')
+                        Select::make('link_member_id')
+                            ->label('Link to existing member')
+                            ->placeholder('— leave blank to create a new member profile below —')
+                            ->helperText('Select an existing member to link to this user account. If selected, the fields below are ignored.')
+                            ->searchable()
+                            ->getSearchResultsUsing(function (string $search): array {
+                                return Member::query()
+                                    ->whereNull('user_id')
+                                    ->where(function ($q) use ($search): void {
+                                        $q->where('no', 'like', "%{$search}%")
+                                            ->orWhere('name', 'like', "%{$search}%")
+                                            ->orWhere('identity_no', 'like', "%{$search}%");
+                                    })
+                                    ->limit(50)
+                                    ->get()
+                                    ->mapWithKeys(fn (Member $m) => [$m->id => "{$m->no} — {$m->name}"])
+                                    ->toArray();
+                            })
+                            ->getOptionLabelUsing(function ($value): ?string {
+                                $member = Member::find($value);
+
+                                return $member ? "{$member->no} — {$member->name}" : null;
+                            })
+                            ->live()
+                            ->columnSpanFull(),
+                        TextInput::make('member_no')
                             ->label('Member number')
-                            ->required()
-                            ->maxLength(20)
-                            ->unique(ignoreRecord: true),
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->placeholder('Auto-generated on save')
+                            ->visible(fn (Get $get): bool => ! filled($get('link_member_id'))),
                         Select::make('identity_type')
                             ->label('Identity Type')
                             ->options([
@@ -72,36 +112,44 @@ class UserResource extends Resource
                                 'driving_licence_no' => 'Driving Licence No',
                                 'pin_no' => 'PIN No',
                             ])
-                            ->required(),
+                            ->visible(fn (Get $get): bool => ! filled($get('link_member_id'))),
                         TextInput::make('identity_no')
                             ->label('Identity Number')
-                            ->required()
                             ->maxLength(50)
-                            ->unique(ignoreRecord: true),
-                        TextInput::make('phone')
-                            ->required()
-                            ->maxLength(20),
+                            ->visible(fn (Get $get): bool => ! filled($get('link_member_id'))),
+                        TextInput::make('member_phone')
+                            ->label('Phone')
+                            ->tel()
+                            ->maxLength(20)
+                            ->visible(fn (Get $get): bool => ! filled($get('link_member_id'))),
                         Select::make('member_status')
+                            ->label('Status')
                             ->options([
                                 'active' => 'Active',
                                 'lapsed' => 'Lapsed',
                                 'suspended' => 'Suspended',
                             ])
-                            ->required(),
+                            ->visible(fn (Get $get): bool => ! filled($get('link_member_id'))),
                         Toggle::make('is_chakama')
                             ->label('Chakama member')
-                            ->inline(false),
+                            ->inline(false)
+                            ->visible(fn (Get $get): bool => ! filled($get('link_member_id'))),
                         Toggle::make('is_sbf')
                             ->label('SBF member')
-                            ->inline(false),
+                            ->inline(false)
+                            ->visible(fn (Get $get): bool => ! filled($get('link_member_id'))),
                         Toggle::make('exclude_from_billing')
                             ->label('Exclude from billing')
-                            ->inline(false),
+                            ->inline(false)
+                            ->visible(fn (Get $get): bool => ! filled($get('link_member_id'))),
                         TextInput::make('customer_no')
-                            ->maxLength(20),
+                            ->maxLength(20)
+                            ->visible(fn (Get $get): bool => ! filled($get('link_member_id'))),
                         TextInput::make('vendor_no')
-                            ->maxLength(20),
+                            ->maxLength(20)
+                            ->visible(fn (Get $get): bool => ! filled($get('link_member_id'))),
                     ])
+                    ->visible(fn (Get $get): bool => (bool) $get('has_member_profile'))
                     ->columns(2),
             ]);
     }
@@ -126,6 +174,11 @@ class UserResource extends Resource
                 IconColumn::make('is_admin')
                     ->label('Admin')
                     ->boolean(),
+                TextColumn::make('entity')
+                    ->label('Module')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => $state?->label() ?? 'SBF (default)')
+                    ->visible(fn (): bool => true),
                 IconColumn::make('member.is_chakama')
                     ->label('Chakama')
                     ->boolean(),

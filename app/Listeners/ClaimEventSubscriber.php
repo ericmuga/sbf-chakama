@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Enums\ApprovalAction;
+use App\Enums\EntityDimension;
 use App\Events\ClaimApprovalActioned;
 use App\Events\ClaimFullyApproved;
 use App\Events\ClaimPaymentCreated;
@@ -26,10 +27,10 @@ class ClaimEventSubscriber
     {
         $claim = $event->claim->load(['approvals.approver', 'member']);
 
-        // Notify admins
-        User::where('is_admin', true)->each(
-            fn (User $admin) => $admin->notify(new ClaimSubmittedNotification($claim))
-        );
+        // Notify SBF admins only (entity = null or 'sbf')
+        User::where('is_admin', true)
+            ->where(fn ($q) => $q->whereNull('entity')->orWhere('entity', EntityDimension::Sbf->value))
+            ->each(fn (User $admin) => $admin->notify(new ClaimSubmittedNotification($claim)));
 
         // Notify first approver
         $firstApproval = $claim->approvals->sortBy('step_order')->first();

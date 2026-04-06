@@ -23,6 +23,8 @@ class CashReceiptResource extends Resource
 
     protected static ?string $navigationLabel = 'My Payments';
 
+    protected static \UnitEnum|string|null $navigationGroup = 'My Finances';
+
     public static function getEloquentQuery(): Builder
     {
         $member = auth()->user()?->member;

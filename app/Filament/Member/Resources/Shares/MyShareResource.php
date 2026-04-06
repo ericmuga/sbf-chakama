@@ -23,6 +23,8 @@ class MyShareResource extends Resource
 
     protected static ?string $navigationLabel = 'My Shares';
 
+    protected static \UnitEnum|string|null $navigationGroup = 'Chakama';
+
     protected static ?int $navigationSort = 10;
 
     public static function shouldRegisterNavigation(array $parameters = []): bool

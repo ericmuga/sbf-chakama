@@ -3,11 +3,9 @@
 namespace App\Filament\Member\Pages;
 
 use App\Filament\Member\Widgets\MemberStatsOverview;
-use App\Filament\Member\Widgets\PortalSwitchWidget;
 use App\Filament\Member\Widgets\RecentClaimsWidget;
 use App\Filament\Member\Widgets\RecentPaymentsWidget;
 use App\Filament\Member\Widgets\ShareSummaryWidget;
-use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 
@@ -31,14 +29,15 @@ class MemberDashboard extends Page
 
     public function getHeaderWidgets(): array
     {
-        $isChakama = Filament::getCurrentPanel()?->getId() === 'chakama-portal';
+        $member = auth()->user()?->member;
+        $widgets = [];
 
-        $widgets = [PortalSwitchWidget::class];
-
-        if ($isChakama) {
-            $widgets[] = ShareSummaryWidget::class;
-        } else {
+        if ($member?->is_sbf) {
             $widgets[] = MemberStatsOverview::class;
+        }
+
+        if ($member?->is_chakama) {
+            $widgets[] = ShareSummaryWidget::class;
         }
 
         return $widgets;
@@ -46,12 +45,15 @@ class MemberDashboard extends Page
 
     public function getFooterWidgets(): array
     {
-        $isChakama = Filament::getCurrentPanel()?->getId() === 'chakama-portal';
+        $member = auth()->user()?->member;
+        $widgets = [];
 
-        if ($isChakama) {
-            return [RecentPaymentsWidget::class];
+        if ($member?->is_sbf) {
+            $widgets[] = RecentClaimsWidget::class;
         }
 
-        return [RecentClaimsWidget::class, RecentPaymentsWidget::class];
+        $widgets[] = RecentPaymentsWidget::class;
+
+        return $widgets;
     }
 }

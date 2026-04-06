@@ -108,6 +108,7 @@
 
     {{-- ─── STEP 3: Confirmed — show receipt + invoice allocation ─────────────────── --}}
     @if ($step === 'confirmed')
+        @php($member = auth()->user()?->member)
         <div class="max-w-2xl mx-auto space-y-6">
 
             {{-- Confirmation badge --}}
@@ -134,11 +135,34 @@
                 </div>
             </x-filament::section>
 
+            {{-- Cross-module bill toggle for dual members --}}
+            @if ($member?->is_sbf && $member?->is_chakama)
+                <x-filament::section>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-medium text-sm text-gray-950 dark:text-white">
+                                {{ $showChakamaBills ? 'Showing All Bills (SBF + Chakama)' : 'Showing SBF Bills Only' }}
+                            </p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                Toggle to include Chakama share bills in this payment allocation.
+                            </p>
+                        </div>
+                        <x-filament::button
+                            wire:click="toggleChakamaBills"
+                            :color="$showChakamaBills ? 'success' : 'gray'"
+                            size="sm"
+                        >
+                            {{ $showChakamaBills ? 'Hide Chakama Bills' : 'Show Chakama Bills' }}
+                        </x-filament::button>
+                    </div>
+                </x-filament::section>
+            @endif
+
             {{-- Invoice allocation --}}
             @if (count($openInvoices) > 0)
                 <x-filament::section>
                     <x-slot name="heading">Apply to Pending Bills</x-slot>
-                    <x-slot name="description">Optionally tag this payment against your open invoices. Leave blank to leave unallocated.</x-slot>
+                    <x-slot name="description">Allocate this payment against your open invoices. Adjust amounts as needed, or leave blank to keep the balance unallocated.</x-slot>
 
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
@@ -172,6 +196,17 @@
                             </tbody>
                         </table>
                     </div>
+
+                    @php($totalApplied = collect($openInvoices)->sum(fn($inv) => (float) $inv['amount_applied']))
+                    @php($balance = (float) $confirmedAmount - $totalApplied)
+                    <div class="mt-4 flex justify-end gap-8 text-sm border-t border-gray-200 dark:border-white/10 pt-3">
+                        <div class="text-gray-500 dark:text-gray-400">
+                            Total allocated: <span class="font-semibold text-gray-900 dark:text-white">KES {{ number_format($totalApplied, 2) }}</span>
+                        </div>
+                        <div class="{{ $balance > 0 ? 'text-warning-600 dark:text-warning-400' : 'text-gray-500 dark:text-gray-400' }}">
+                            Unallocated balance: <span class="font-semibold">KES {{ number_format($balance, 2) }}</span>
+                        </div>
+                    </div>
                 </x-filament::section>
             @endif
 
@@ -195,4 +230,3 @@
     @endif
 
 </x-filament-panels::page>
-

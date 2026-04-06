@@ -24,13 +24,13 @@ class MemberPanelProvider extends PanelProvider
         return $panel
             ->id('member')
             ->path('portal')
-            ->domain(config('app.sbf_domain'))
             ->login()
-            ->brandName('SOBA Benevolent Fund — Member Portal')
+            ->brandName('SBF & Chakama — Member Portal')
             ->colors([
                 'primary' => Color::Indigo,
             ])
             ->databaseNotifications()
+            ->profile()
             ->discoverResources(in: app_path('Filament/Member/Resources'), for: 'App\Filament\Member\Resources')
             ->discoverPages(in: app_path('Filament/Member/Pages'), for: 'App\Filament\Member\Pages')
             ->discoverWidgets(in: app_path('Filament/Member/Widgets'), for: 'App\Filament\Member\Widgets')

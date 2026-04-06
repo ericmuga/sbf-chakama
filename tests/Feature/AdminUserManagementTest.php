@@ -79,17 +79,13 @@ class AdminUserManagementTest extends TestCase
                 'email' => 'filament-created@example.com',
                 'password' => 'password',
                 'is_admin' => false,
-                'member' => [
-                    'no' => 'MEM-001',
-                    'identity_type' => 'national_id',
-                    'identity_no' => '12345678',
-                    'phone' => '0712345678',
-                    'member_status' => 'active',
-                    'is_chakama' => true,
-                    'is_sbf' => false,
-                    'customer_no' => 'CUST-001',
-                    'vendor_no' => 'VEND-001',
-                ],
+                'has_member_profile' => true,
+                'identity_type' => 'national_id',
+                'identity_no' => '12345678',
+                'member_phone' => '0712345678',
+                'member_status' => 'active',
+                'is_chakama' => true,
+                'is_sbf' => false,
             ])
             ->call('create')
             ->assertHasNoErrors();
@@ -103,15 +99,12 @@ class AdminUserManagementTest extends TestCase
 
         $this->assertDatabaseHas(Member::class, [
             'user_id' => $user->id,
-            'no' => 'MEM-001',
             'identity_type' => 'national_id',
             'identity_no' => '12345678',
             'phone' => '0712345678',
             'member_status' => 'active',
             'is_chakama' => true,
             'is_sbf' => false,
-            'customer_no' => 'CUST-001',
-            'vendor_no' => 'VEND-001',
         ]);
     }
 

@@ -31,6 +31,7 @@ class ChakamaMemberPanelProvider extends PanelProvider
                 'primary' => Color::Emerald,
             ])
             ->databaseNotifications()
+            ->profile()
             ->discoverResources(
                 in: app_path('Filament/Member/Resources'),
                 for: 'App\Filament\Member\Resources'
