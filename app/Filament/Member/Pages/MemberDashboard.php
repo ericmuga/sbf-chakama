@@ -2,6 +2,7 @@
 
 namespace App\Filament\Member\Pages;
 
+use App\Filament\Member\Widgets\MemberPaymentHistoryChart;
 use App\Filament\Member\Widgets\MemberStatsOverview;
 use App\Filament\Member\Widgets\RecentClaimsWidget;
 use App\Filament\Member\Widgets\RecentPaymentsWidget;
@@ -53,6 +54,7 @@ class MemberDashboard extends Page
         }
 
         $widgets[] = RecentPaymentsWidget::class;
+        $widgets[] = MemberPaymentHistoryChart::class;
 
         return $widgets;
     }

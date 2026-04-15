@@ -31,11 +31,13 @@ use App\Filament\Resources\Finance\VendorPayments\VendorPaymentResource;
 use App\Filament\Resources\Finance\VendorPostingGroups\VendorPostingGroupResource;
 use App\Filament\Resources\Finance\Vendors\VendorResource;
 use App\Filament\Resources\Members\MemberResource;
-use App\Filament\Resources\Projects\ProjectResource;
 use App\Filament\Resources\UserResource;
 use App\Filament\Widgets\DepositsChart;
+use App\Filament\Widgets\ExpenseBreakdownChart;
 use App\Filament\Widgets\FinanceStatsOverview;
 use App\Filament\Widgets\LatestNotificationsWidget;
+use App\Filament\Widgets\MemberComplianceWidget;
+use App\Filament\Widgets\NetPositionWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -95,7 +97,6 @@ class AdminPanelProvider extends PanelProvider
                 VendorPaymentResource::class,
                 VendorPostingGroupResource::class,
                 VendorResource::class,
-                ProjectResource::class,
             ])
             ->pages([
                 Dashboard::class,
@@ -103,7 +104,6 @@ class AdminPanelProvider extends PanelProvider
                 SystemPage::class,
             ])
             ->navigationGroups([
-                NavigationGroup::make('Project Management'),
                 NavigationGroup::make('Finance — Income & Deposits'),
                 NavigationGroup::make('Finance — Expenses & Claims'),
                 NavigationGroup::make('Finance — Ledgers'),
@@ -112,8 +112,11 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->databaseNotifications()
             ->widgets([
+                NetPositionWidget::class,
                 FinanceStatsOverview::class,
                 DepositsChart::class,
+                MemberComplianceWidget::class,
+                ExpenseBreakdownChart::class,
                 LatestNotificationsWidget::class,
             ])
             ->middleware([

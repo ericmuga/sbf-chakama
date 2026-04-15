@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\Finance\VendorPayments\Tables;
 
+use App\Models\Finance\VendorPayment;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -39,7 +41,10 @@ class VendorPaymentsTable
             ])
             ->defaultSort('posting_date', 'desc')
             ->recordActions([
-                EditAction::make(),
+                ViewAction::make()
+                    ->visible(fn (VendorPayment $record): bool => strtolower($record->status) === 'posted'),
+                EditAction::make()
+                    ->visible(fn (VendorPayment $record): bool => strtolower($record->status) !== 'posted'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

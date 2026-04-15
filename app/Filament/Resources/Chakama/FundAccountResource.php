@@ -30,7 +30,7 @@ class FundAccountResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingLibrary;
 
-    protected static \UnitEnum|string|null $navigationGroup = 'Chakama — Funds';
+    protected static \UnitEnum|string|null $navigationGroup = 'Chakama — Settings';
 
     protected static ?int $navigationSort = 1;
 

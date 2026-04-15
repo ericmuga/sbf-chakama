@@ -13,6 +13,23 @@ class ListCashReceipts extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('exportExcel')
+                ->label('Export Excel')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->url(function (): string {
+                    $dateFilter = $this->getTableFilterState('posting_date') ?? [];
+                    $methodFilter = $this->getTableFilterState('payment_method_id') ?? [];
+                    $statusFilter = $this->getTableFilterState('status') ?? [];
+
+                    return route('admin.reports.receipts.excel', array_filter([
+                        'date_from' => $dateFilter['from'] ?? null,
+                        'date_to' => $dateFilter['to'] ?? null,
+                        'payment_method_id' => $methodFilter['value'] ?? null,
+                        'status' => $statusFilter['value'] ?? null,
+                    ]));
+                })
+                ->openUrlInNewTab(),
             Action::make('newReceipt')
                 ->label('Post New Receipt')
                 ->icon('heroicon-o-plus')

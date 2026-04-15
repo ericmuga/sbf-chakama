@@ -3,6 +3,7 @@
 namespace App\Filament\Member\Resources\CashReceipts\Tables;
 
 use App\Filament\Member\Pages\MakePayment;
+use App\Models\Finance\CashReceipt;
 use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
@@ -22,6 +23,8 @@ class CashReceiptsTable
                     ->label('Date')
                     ->date('d M Y')
                     ->sortable(),
+                TextColumn::make('paymentMethod.description')
+                    ->label('Payment Method'),
                 TextColumn::make('amount')
                     ->label('Amount (KES)')
                     ->numeric(decimalPlaces: 2)
@@ -39,6 +42,13 @@ class CashReceiptsTable
                     ->url(fn (): string => MakePayment::getUrl()),
             ])
             ->recordActions([
+                Action::make('downloadPdf')
+                    ->label('Download Receipt')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->hidden(fn (CashReceipt $record): bool => strtolower($record->status) !== 'posted')
+                    ->url(fn (CashReceipt $record): string => route('admin.reports.receipt.pdf', $record))
+                    ->openUrlInNewTab(),
                 ViewAction::make(),
             ])
             ->toolbarActions([]);

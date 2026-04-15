@@ -1,0 +1,379 @@
+================================================================================
+  SOBA ALUMNI PORTAL — FINANCE MODULE
+  USER MANUAL: FINANCE — EXPENSES & CLAIMS
+  Admin Panel Navigation Group: "Finance — Expenses & Claims"
+================================================================================
+
+This manual covers all items in the Finance — Expenses & Claims group:
+  1. Claims          (SBF member claim management)
+  2. Expenses        (Purchase orders / purchase invoices)
+  3. Disbursements   (Vendor payments with invoice allocation)
+
+It also covers the conceptual relationship to Chakama fund withdrawals,
+which run their own approval chain but feed into the same Expenses and
+Disbursements screens at the finance posting stage.
+
+PREREQUISITE: Finance — Setup must be fully configured.
+See finance-setup-manual.txt.
+
+DOCUMENT FLOW (Expenses):
+  Create Purchase Order → Post Purchase Invoice →
+  Vendor Ledger Entry (open, amount owed) created
+
+  Create Vendor Payment → Post Vendor Payment →
+  Vendor Ledger Entry (closed) + GL Entry (bank credit, payables debit)
+
+DOCUMENT FLOW (SBF Claims):
+  Member creates Claim → Submit for Approval → Approve →
+  System creates Purchase Order → Post → Vendor Ledger Entry →
+  Create Disbursement → Post → Vendor Ledger closed
+
+================================================================================
+  1. CLAIMS
+  Nav path: Finance — Expenses & Claims → Claims
+================================================================================
+
+WHAT IT IS:
+  SBF member reimbursement claims. A member submits a claim for expenses
+  they have incurred. It goes through an approval chain. Once approved,
+  the system creates a linked Purchase Order that flows through the
+  standard expense and disbursement process.
+
+  VISIBILITY NOTE: Claims are gated on the is_sbf flag. Chakama-only
+  members do not see claims. Dual members (is_sbf = true) see both.
+
+--------------------------------------------------------------------------------
+  1.1 CLAIM LIFECYCLE (ADMIN VIEW)
+--------------------------------------------------------------------------------
+
+  DRAFT:
+    - Member creates claim via member portal, OR
+    - Admin creates on behalf of a member here.
+    - Claim lines are added (description, quantity, unit amount).
+    - Claim can be edited, lines added/removed.
+
+  SUBMITTED:
+    - Member clicks "Submit" in the portal, OR admin submits here.
+    - Approval chain rows are created from the configured template.
+    - Claim is locked for editing.
+
+  UNDER REVIEW / APPROVED / REJECTED:
+    - Approvers work through the chain.
+    - Each approver receives an email notification.
+    - Rejection at any step → Claim status = Rejected (notifies member).
+    - All steps Approved → Claim status = Approved.
+
+  PAYMENT CREATED:
+    - Once approved, admin creates a Purchase Order linked to the claim.
+    - The PO targets the member's Vendor record.
+    - PO is posted → Vendor Ledger entry created.
+
+  PAID:
+    - Admin creates a Disbursement (Vendor Payment) referencing the PO.
+    - On posting, the Vendor Ledger entry is closed.
+    - Claim status → Paid.
+    - Member receives "Claim Paid" notification.
+
+--------------------------------------------------------------------------------
+  1.2 ADMIN ACTIONS ON CLAIMS LIST
+--------------------------------------------------------------------------------
+
+  The Claims list shows:
+    Claim No, Member, Description (truncated), Amount, Status badge,
+    Submission Date, Payment Date.
+
+  Available row actions:
+    View    → Read-only detail view showing all lines and approval history
+    Edit    → Only available in Draft status
+    Approve → Available to users assigned to the current approval step
+    Reject  → Same visibility as Approve; requires a reason
+
+  Filters:
+    Status  → Draft | Submitted | Under Review | Approved | Rejected |
+               Payment Created | Paid | Cancelled
+    Member  → select a specific member
+
+--------------------------------------------------------------------------------
+  1.3 APPROVAL TEMPLATES
+--------------------------------------------------------------------------------
+
+  Navigate to: Finance — Expenses & Claims → Approval Templates
+
+  An approval template is a reusable chain of approvers.
+  Steps are defined with:
+    Step Order     : Sequence number (1, 2, 3...)
+    Approver       : The user responsible for this step
+    Required       : Whether this step is mandatory
+
+  NOTE: Chakama Fund Withdrawals also reuse these same approval templates.
+  One template can serve both SBF claims and Chakama fund withdrawals.
+
+
+================================================================================
+  2. EXPENSES (Purchase Orders)
+  Nav path: Finance — Expenses & Claims → Expenses
+================================================================================
+
+WHAT IT IS:
+  Purchase Headers represent purchase orders (POs) and purchase invoices
+  raised against vendors. They record money the organisation owes to
+  payees. On posting, they create Vendor Ledger entries and GL entries.
+
+  In the SOBA system, purchase orders are created:
+    (a) Manually by an admin for supplier payments
+    (b) Automatically when an approved SBF claim is converted to a PO
+    (c) Automatically when an approved Chakama fund withdrawal is
+        converted to a purchase order
+
+--------------------------------------------------------------------------------
+  2.1 CREATING A PURCHASE ORDER
+--------------------------------------------------------------------------------
+
+  Navigate to: Finance — Expenses & Claims → Expenses → New
+
+  Vendor           : Search and select the payee. The vendor's
+                     Vendor Posting Group is used for GL posting.
+                     For member reimbursements, the member's auto-created
+                     vendor record should be used.
+
+  Document Type    : Invoice     → standard bill from a vendor
+                     Credit Memo → reversal document
+
+  Posting Date     : Date of posting to the ledger.
+
+  Due Date         : Payment due date (for cash flow planning).
+
+  Purchase Lines:
+    Each line requires:
+      Service      : Select from Purchasable services.
+      Description  : Auto-filled; editable.
+      Quantity     : Number of units.
+      Unit Price   : Price per unit (KES).
+      Line Amount  : Calculated = Quantity × Unit Price.
+
+  Linked Fields (auto-filled in workflow):
+    fund_withdrawal_id  : Set by system when a Chakama fund withdrawal
+                         is converted to a PO.
+    (Other linkage fields for project cost tracking.)
+
+--------------------------------------------------------------------------------
+  2.2 POSTING A PURCHASE ORDER
+--------------------------------------------------------------------------------
+
+  From the list: click the [✓ Post] row action.
+  From the detail view: same header button.
+
+  WHAT HAPPENS ON POSTING:
+    1. Status changes to Posted.
+    2. A Vendor Ledger Entry is created:
+          document_type    = Invoice
+          amount           = total PO amount
+          remaining_amount = same (unpaid)
+          is_open          = true
+    3. GL entries are created for each line:
+          DR  Expense Account     (from Service Posting Group)
+          CR  Payables Account    (from Vendor Posting Group)
+    4. The PO cannot be edited after posting.
+
+  LINKED WORKFLOW:
+    When posted POs are linked to SBF claims:
+      → Claim status may advance to "Payment Created"
+    When posted POs are linked to Chakama fund withdrawals:
+      → Withdrawal status advances to "Purchase Created"
+
+--------------------------------------------------------------------------------
+  2.3 TABLE COLUMNS
+--------------------------------------------------------------------------------
+
+  Document No      : PO number
+  Vendor           : Payee name (searchable)
+  Type             : Invoice / Credit Memo
+  Posting Date     : Date (default sort = newest first)
+  Amount           : Total KES
+  Status           : Open (amber) / Posted (green)
+
+
+================================================================================
+  3. DISBURSEMENTS (Vendor Payments)
+  Nav path: Finance — Expenses & Claims → Disbursements
+================================================================================
+
+WHAT IT IS:
+  A Disbursement (Vendor Payment) records actual money paid OUT to a vendor.
+  It is applied against one or more open Vendor Ledger entries (posted POs)
+  to close them out. On posting it creates GL entries debiting the
+  Payables account and crediting the Bank account.
+
+  This is the final step in the expense cycle — after this, the
+  vendor's outstanding balance is reduced and the bank account
+  reflects the outflow.
+
+--------------------------------------------------------------------------------
+  3.1 CREATING A VENDOR PAYMENT
+--------------------------------------------------------------------------------
+
+  Navigate to: Finance — Expenses & Claims → Disbursements → New
+
+  Payment No       : Auto-generated on save (from Purchase Setup →
+                     Invoice Number Series). Blank on create form.
+
+  Vendor           : Search and select.
+                     Selecting a vendor immediately loads all OPEN
+                     Vendor Ledger entries for that vendor in the
+                     Invoice Allocations section below.
+
+  Payment Method   : Select (M-PESA, Bank Transfer, Cash, etc.)
+                     Selecting a method auto-fills the Bank Account
+                     below from the method's Default Bank Account.
+
+  Bank Account     : Where the payment is made FROM. Auto-filled;
+                     can be overridden.
+
+  Posting Date     : Date of the payment. Defaults to today.
+
+  Total Amount Paid: The total KES amount being disbursed in this
+                     payment. Must equal or be less than the sum
+                     of amount_to_apply across all allocated lines.
+
+  INVOICE ALLOCATIONS SECTION:
+    This appears automatically after a Vendor is selected.
+    It shows all open (unpaid) Vendor Ledger entries for the vendor.
+
+    For each line:
+      Invoice No          : The reference of the posted PO (read-only)
+      Due Date            : When payment was due (read-only)
+      Outstanding Balance : Remaining unpaid amount (read-only, KES)
+      Amount to Apply     : How much of this payment to allocate to
+                            this specific invoice.
+                            Must be ≤ Outstanding Balance.
+                            Can be 0 if you are not paying this invoice.
+
+    Lines cannot be added or deleted — they are auto-populated from
+    the vendor's open ledger.
+
+    PARTIAL PAYMENT EXAMPLE:
+      Invoice INV-000012  Outstanding KES 50,000  Apply KES 30,000
+      Invoice INV-000015  Outstanding KES 20,000  Apply KES 20,000
+      Total Amount Paid:  KES 50,000
+      → INV-000012 partially paid: remaining = 20,000, still open
+      → INV-000015 fully paid:     remaining = 0,      closed
+
+    FULL PAYMENT EXAMPLE:
+      Invoice INV-000012  Outstanding KES 50,000  Apply KES 50,000
+      Total Amount Paid:  KES 50,000
+      → INV-000012 fully paid, closed
+
+--------------------------------------------------------------------------------
+  3.2 POSTING A VENDOR PAYMENT
+--------------------------------------------------------------------------------
+
+  From the list: click [✓ Post] row action (or edit button to open first).
+  NOTE: The post action may be triggered from within the edit/view page.
+
+  WHAT HAPPENS ON POSTING:
+    1. Status changes to Posted.
+    2. GL entries created:
+          DR  Payables Account      (Vendor Posting Group)
+          CR  Bank Account GL       (Bank Account → Bank Posting Group)
+    3. For each allocation row where amount_to_apply > 0:
+          Vendor Ledger Entry remaining_amount is reduced by amount_to_apply.
+          If remaining_amount = 0: is_open = false (closed).
+    4. The payment cannot be edited or deleted after posting.
+    5. If this payment is linked to a Chakama fund withdrawal:
+          Withdrawal status may advance to "Paid".
+          FundTransaction outflow recorded in the fund account.
+
+  PRECONDITIONS:
+    - Vendor must be selected.
+    - Payment Method and Bank Account must be set.
+    - Bank Account must have a Bank Posting Group.
+    - Total Amount Paid must be > 0.
+    - The sum of amount_to_apply values must equal Total Amount Paid.
+
+  COMMON ERROR:
+    "Amount to apply exceeds outstanding balance" — reduce the
+    amount_to_apply on the relevant line.
+
+    "Sum of allocations does not match total" — ensure the
+    total_amount_paid field equals the sum of all amount_to_apply values.
+
+--------------------------------------------------------------------------------
+  3.3 CAN EDIT / CAN DELETE RULES
+--------------------------------------------------------------------------------
+
+  A Disbursement record can only be edited or deleted if:
+    - You are an administrator, AND
+    - Status = Open (not yet posted)
+
+  Posted disbursements are locked. To correct a posted payment,
+  you must create a reversing journal entry via GL Entries or work
+  with a Finance administrator.
+
+--------------------------------------------------------------------------------
+  3.4 TABLE COLUMNS
+--------------------------------------------------------------------------------
+
+  Payment No       : Auto-number (searchable)
+  Vendor           : Payee name (searchable, sortable)
+  Bank Account     : Funding account
+  Posting Date     : Date (default sort = newest first)
+  Amount           : KES paid
+  Status           : Open (amber) / Posted (green)
+
+
+================================================================================
+  GL IMPACT REFERENCE — EXPENSES & DISBURSEMENTS
+================================================================================
+
+  EVENT                     DEBIT                    CREDIT
+  ─────────────────────────────────────────────────────────────────────────────
+  Post Purchase Order       Expense Account          Payables Account
+  (PO Invoice)              (Service Posting Grp)    (Vendor Posting Grp)
+
+  Post Vendor Payment       Payables Account         Bank GL Account
+  (Disbursement)            (Vendor Posting Grp)     (Bank Posting Grp)
+
+  Post PO Credit Memo       Payables Account         Expense Account
+  (Reversal)                (Vendor Posting Grp)     (Service Posting Grp)
+
+
+================================================================================
+  COMPLETE EXPENSE CYCLE — STEP BY STEP
+================================================================================
+
+  STEP  WHERE                    ACTION
+  ────────────────────────────────────────────────────────────────────────────
+  1     Expenses                 Create Purchase Order (vendor, lines)
+  2     Expenses                 Post PO
+                                 → Vendor Ledger: DR Expense, CR Payables
+                                 → Vendor Ledger Entry created (open)
+
+  3     Disbursements            Create Vendor Payment
+                                 Select vendor → allocations auto-load
+                                 Fill Amount to Apply per invoice
+                                 Set Total Amount Paid
+
+  4     Disbursements            Post Vendor Payment
+                                 → GL: DR Payables, CR Bank
+                                 → Vendor Ledger Entry: remaining_amount -= applied
+                                 → If fully paid: is_open = false
+
+  FOR SBF CLAIMS SPECIFICALLY:
+  Step 0: Member creates claim (portal)
+  Step 1: Admin approves via Claims list
+  Step 2: System auto-creates PO (Step 1 above)
+  Steps 3–4: Admin creates and posts disbursement
+  Step 5: Claim status advances to Paid; member notified
+
+  FOR CHAKAMA FUND WITHDRAWALS:
+  Step 0: Admin creates fund withdrawal
+  Step 1: Admin submits → approval chain
+  Step 2: Approver(s) approve
+  Step 3: Admin clicks "Convert to Purchase" → PO created (Step 1 above)
+  Steps 4–5: Admin creates and posts disbursement
+  Step 6: Fund withdrawal status → Paid; fund balance decremented
+
+
+================================================================================
+  END OF DOCUMENT
+================================================================================

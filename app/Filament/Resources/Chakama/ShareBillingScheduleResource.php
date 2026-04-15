@@ -10,6 +10,7 @@ use App\Filament\Resources\Chakama\Pages\ViewShareBillingSchedule;
 use App\Models\FundAccount;
 use App\Models\ShareBillingSchedule;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
@@ -17,6 +18,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
@@ -77,9 +79,30 @@ class ShareBillingScheduleResource extends Resource
             ]);
     }
 
+    private static function subscriptionsAside(): Action
+    {
+        return Action::make('viewSubscriptions')
+            ->slideOver()
+            ->modalHeading(fn (ShareBillingSchedule $record): string => "Subscriptions — {$record->name}")
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel('Close')
+            ->schema(fn (ShareBillingSchedule $record): array => [
+                View::make('filament.chakama.subscriptions-table')
+                    ->viewData([
+                        'subscriptions' => $record->subscriptions()->with('member')->orderByDesc('subscribed_at')->get(),
+                    ]),
+            ]);
+    }
+
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query
+                ->withCount('subscriptions')
+                ->withSum('subscriptions', 'number_of_shares')
+                ->withSum('subscriptions', 'total_amount')
+                ->withSum('subscriptions', 'amount_paid')
+            )
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
@@ -100,6 +123,33 @@ class ShareBillingScheduleResource extends Resource
                 IconColumn::make('is_active')
                     ->label('Active')
                     ->boolean(),
+                TextColumn::make('subscriptions_count')
+                    ->label('Subscribers')
+                    ->numeric()
+                    ->sortable()
+                    ->alignCenter()
+                    ->action(static::subscriptionsAside()),
+                TextColumn::make('subscriptions_sum_number_of_shares')
+                    ->label('Total Shares')
+                    ->numeric()
+                    ->sortable()
+                    ->alignCenter()
+                    ->action(static::subscriptionsAside()),
+                TextColumn::make('subscriptions_sum_total_amount')
+                    ->label('Total Value')
+                    ->money('KES')
+                    ->sortable()
+                    ->action(static::subscriptionsAside()),
+                TextColumn::make('subscriptions_sum_amount_paid')
+                    ->label('Total Collected')
+                    ->money('KES')
+                    ->sortable()
+                    ->action(static::subscriptionsAside()),
+                TextColumn::make('outstanding')
+                    ->label('Outstanding')
+                    ->money('KES')
+                    ->state(fn (ShareBillingSchedule $record): float => (float) $record->subscriptions_sum_total_amount - (float) $record->subscriptions_sum_amount_paid)
+                    ->action(static::subscriptionsAside()),
             ])
             ->filters([])
             ->recordActions([

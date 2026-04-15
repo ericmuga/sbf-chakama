@@ -2,8 +2,10 @@
 
 namespace App\Filament\Member\Resources\Shares\Pages;
 
+use App\Filament\Member\Pages\MakePayment;
 use App\Filament\Member\Resources\Shares\MyShareResource;
 use App\Models\ShareBillingSchedule;
+use App\Services\ShareBillingService;
 use App\Services\ShareService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -74,13 +76,25 @@ class ListMyShares extends ListRecords
                                 ->label('Relationship to Member'),
                         ]),
                 ])
-                ->action(function (array $data, ShareService $service): void {
+                ->action(function (array $data, ShareService $shareService, ShareBillingService $billingService): void {
                     $member = auth()->user()->member;
-                    $service->subscribe($member, $data);
+                    $subscription = $shareService->subscribe($member, $data);
+
+                    try {
+                        $billingService->generateInvoice($subscription);
+                    } catch (\Throwable) {
+                        // Invoice generation failed — member can still pay via My Bills
+                    }
+
+                    $outstanding = number_format((float) $subscription->total_amount, 2, '.', '');
+
+                    $this->redirect(MakePayment::getUrl([
+                        'amount' => $outstanding,
+                        'subscription_id' => $subscription->id,
+                    ]));
                 })
-                ->successNotificationTitle('Share subscription created successfully.')
                 ->modalHeading('Subscribe to Share')
-                ->modalSubmitActionLabel('Subscribe'),
+                ->modalSubmitActionLabel('Subscribe & Pay'),
         ];
     }
 }

@@ -1,0 +1,424 @@
+================================================================================
+  SOBA ALUMNI PORTAL — FINANCE MODULE
+  USER MANUAL: FINANCE — LEDGERS
+  Admin Panel Navigation Group: "Finance — Ledgers"
+================================================================================
+
+This manual covers all three ledger screens:
+  1. Customer Ledger   — tracks what members owe and what they've paid
+  2. Vendor Ledger     — tracks what the organisation owes to payees
+  3. G/L Entries       — the immutable double-entry general ledger
+
+THE LEDGERS ARE READ-ONLY BY DESIGN.
+  All entries in these screens are created AUTOMATICALLY by the system
+  when sales invoices, cash receipts, purchase orders, and vendor
+  payments are POSTED. You should not (and in most cases cannot) create
+  or delete ledger entries manually.
+
+  The only administrative action available is "Apply Entries" — matching
+  open credits against open debits to close them — and even this is
+  restricted to admin users and only on open entries.
+
+GOLDEN RULE:
+  If the ledger does not show what you expect, trace back to the source
+  document (invoice, receipt, PO, or payment) and check whether it was
+  posted correctly. Never try to fix a ledger problem by editing the
+  ledger directly.
+
+================================================================================
+  1. CUSTOMER LEDGER
+  Nav path: Finance — Ledgers → Customer Ledger
+================================================================================
+
+WHAT IT IS:
+  A running account for every customer (member), showing every invoice
+  issued to them and every receipt applied against those invoices.
+  The Customer Ledger is the authoritative record of what each member
+  owes (their outstanding balance).
+
+ENTRIES ARE CREATED BY:
+  - Posting a Sales Invoice          → creates an entry with a POSITIVE amount
+  - Posting a Cash Receipt           → reduces open invoice remaining_amount
+  - Posting a Sales Credit Memo      → creates an entry with a NEGATIVE amount
+
+--------------------------------------------------------------------------------
+  1.1 READING THE CUSTOMER LEDGER LIST
+--------------------------------------------------------------------------------
+
+  Column          Meaning
+  ───────────────────────────────────────────────────────────────────────────
+  Entry No        : System-generated unique sequence number.
+  Customer        : Member name.
+  Document Type   : Invoice | Credit Memo | Payment
+  Document No     : Reference number of the source document
+                    (e.g. INV-000023, REC-000011)
+  Posting Date    : Date the source document was posted.
+  Due Date        : Payment due date (from the invoice).
+  Amount          : Total value of this entry in KES.
+                    Positive = debit (invoice, member owes this)
+                    Negative = credit (receipt or credit memo applied)
+  Remaining Amount: How much of this entry is still outstanding.
+                    When this reaches 0, the entry is closed.
+  Is Open         : Green tick = open (outstanding balance > 0)
+                    Grey cross = closed (fully settled)
+
+  DEFAULT SORT: Posting Date, newest first.
+
+  FILTERING:
+    - Filter by Customer to see a specific member's full history.
+    - Filter Is Open = Yes to see only outstanding balances.
+    - Filter Document Type to see only invoices or only receipts.
+
+--------------------------------------------------------------------------------
+  1.2 UNDERSTANDING OPEN VS CLOSED ENTRIES
+--------------------------------------------------------------------------------
+
+  OPEN entry:   remaining_amount > 0
+                The member still owes money on this document.
+
+  CLOSED entry: remaining_amount = 0
+                This document has been fully paid/applied.
+
+  HOW AN INVOICE GETS CLOSED:
+    When a Cash Receipt is posted for the full invoice amount, the
+    system matches the receipt to the oldest open invoice(s) for
+    that customer. When the invoice's remaining_amount reaches 0,
+    is_open is set to false automatically.
+
+  PARTIAL PAYMENTS:
+    If a receipt is less than the invoice amount, the invoice
+    remaining_amount is reduced but it stays open (is_open = true).
+    The member still owes the difference.
+
+    EXAMPLE:
+      Invoice INV-000030   Amount: KES 50,000    Remaining: KES 50,000 (Open)
+      Receipt REC-000015   Amount: KES 30,000
+      → After posting:
+        INV-000030 remaining_amount = KES 20,000  (still Open)
+
+    EXAMPLE (full payment):
+      Receipt REC-000016   Amount: KES 20,000
+      → After posting:
+        INV-000030 remaining_amount = KES 0       (Closed)
+
+--------------------------------------------------------------------------------
+  1.3 APPLYING ENTRIES MANUALLY
+--------------------------------------------------------------------------------
+
+  In some cases, open entries may not have been automatically matched
+  (e.g. a credit memo was posted but not applied to its invoice).
+  An admin can manually apply them.
+
+  HOW:
+    Open the Customer Ledger → click on an open entry → [Edit]
+    The form shows all fields as READ-ONLY except the admin can
+    trigger the apply-entries workflow.
+
+  NOTE: The apply-entries process is primarily done via the service layer
+  and may be handled via tinker or a future "Apply Entries" UI button.
+  The edit form currently shows fields for reference only.
+
+  FIELDS VISIBLE IN THE FORM:
+    Entry No          : System identifier (read-only)
+    Customer          : Name (read-only)
+    Document Type     : Invoice / Payment / Credit Memo (read-only)
+    Document No       : Source document reference (read-only)
+    Posting Date      : Date posted (read-only)
+    Due Date          : Original due date (read-only)
+    Amount            : Total entry value (read-only)
+    Remaining Amount  : Current outstanding balance (read-only)
+    Is Open           : Whether entry is still outstanding (read-only)
+
+  CAN CREATE:   No — entries are system-generated only.
+  CAN DELETE:   No — entries are permanent once created.
+  CAN EDIT:     Admin only, and only for Open entries. Currently
+                the form is read-only even for admins; apply-entries
+                workflow is done programmatically.
+
+--------------------------------------------------------------------------------
+  1.4 CHECKING A MEMBER'S BALANCE
+--------------------------------------------------------------------------------
+
+  METHOD 1 — Customer Ledger filter:
+    Filter by Customer → filter Is Open = Yes → sum Remaining Amount column.
+
+  METHOD 2 — Member Portal (member's own view):
+    The member's portal dashboard shows their Account Balance,
+    calculated as SUM(remaining_amount) from their ledger entries.
+
+  METHOD 3 — My Statement page (member portal):
+    Shows a detailed running balance of all debit/credit entries
+    with a balance column per line.
+
+
+================================================================================
+  2. VENDOR LEDGER
+  Nav path: Finance — Ledgers → Vendor Ledger
+================================================================================
+
+WHAT IT IS:
+  The mirror of the Customer Ledger, but for the organisation's
+  liabilities. It shows every purchase order/invoice posted (money
+  owed TO vendors) and every disbursement (vendor payment) that has
+  reduced those liabilities.
+
+ENTRIES ARE CREATED BY:
+  - Posting a Purchase Order (Invoice)   → creates a POSITIVE entry
+                                           (organisation owes this to vendor)
+  - Posting a Vendor Payment             → reduces remaining_amount
+  - Posting a Purchase Credit Memo       → creates a NEGATIVE entry
+
+--------------------------------------------------------------------------------
+  2.1 READING THE VENDOR LEDGER LIST
+--------------------------------------------------------------------------------
+
+  Column          Meaning
+  ───────────────────────────────────────────────────────────────────────────
+  Entry No        : System-generated unique sequence number.
+  Vendor          : Payee name.
+  Document Type   : Invoice | Payment | Credit Memo
+  Document No     : Reference of the source document
+                    (e.g. PI-000008, VEND-PMT-000003)
+  Posting Date    : Date posted.
+  Due Date        : When payment is due.
+  Amount          : Total value. Positive = liability (we owe this).
+                    Negative = payment/credit applied.
+  Remaining Amount: Outstanding balance on this entry.
+  Is Open         : Tick = outstanding. Cross = fully paid.
+
+  FILTERING:
+    - Filter by Vendor to see all entries for a specific payee.
+    - Filter Is Open = Yes to see all outstanding liabilities.
+    - Use Posting Date range to find entries for a specific period.
+
+--------------------------------------------------------------------------------
+  2.2 HOW VENDOR LEDGER ENTRIES GET CLOSED
+--------------------------------------------------------------------------------
+
+  When a Vendor Payment (Disbursement) is posted:
+    - Each allocation in the payment specifies an amount_to_apply
+      for each open Vendor Ledger entry.
+    - The system reduces remaining_amount by amount_to_apply for each entry.
+    - Entries where remaining_amount = 0 are marked is_open = false.
+
+  IMPORTANT: Unlike Customer Ledger (where receipts auto-match to oldest
+  invoice), Vendor Payments require EXPLICIT allocation — you specify
+  exactly which invoice is being paid and how much. This allows partial
+  payments and targeted allocation across multiple invoices.
+
+--------------------------------------------------------------------------------
+  2.3 FORM FIELDS
+--------------------------------------------------------------------------------
+
+  Identical structure to Customer Ledger entries:
+    Entry No, Vendor, Document Type, Document No, Posting Date,
+    Due Date, Amount, Remaining Amount, Is Open — all READ-ONLY.
+
+  CAN CREATE:   No.
+  CAN DELETE:   No.
+  CAN EDIT:     Admin only, Open entries only (read-only display currently).
+
+--------------------------------------------------------------------------------
+  2.4 OUTSTANDING LIABILITIES REPORT
+--------------------------------------------------------------------------------
+
+  To see all money the organisation currently owes:
+    Filter: Is Open = Yes
+    Columns to review: Vendor, Document No, Amount, Remaining Amount, Due Date
+
+  Sort by Due Date ascending to prioritise overdue payments.
+
+  To see what is owed to a specific member (for SBF claim reimbursement):
+    Filter: Vendor = [member's vendor name] + Is Open = Yes
+
+
+================================================================================
+  3. G/L ENTRIES
+  Nav path: Finance — Ledgers → G/L Entries
+================================================================================
+
+WHAT IT IS:
+  The General Ledger (GL) is the final destination of all accounting
+  transactions. Every posting in the system — invoices, receipts,
+  purchase orders, payments — generates pairs of GL entries (debits and
+  credits) that must always balance.
+
+  The GL is the single source of truth for the organisation's financial
+  position. All balances on the balance sheet and income statement
+  derive from GL entries.
+
+ENTRIES ARE CREATED BY:
+  - Posting a Sales Invoice
+  - Posting a Cash Receipt
+  - Posting a Purchase Order
+  - Posting a Vendor Payment
+  - Any manual journal entry (if used by finance admins)
+
+  CANNOT BE CREATED MANUALLY through the UI.
+  CANNOT BE EDITED.
+  CANNOT BE DELETED.
+
+--------------------------------------------------------------------------------
+  3.1 READING THE G/L ENTRIES LIST
+--------------------------------------------------------------------------------
+
+  The GL Entries list is a complete chronological record of all
+  double-entry bookkeeping transactions.
+
+  Each transaction creates AT MINIMUM two entries (one debit, one credit).
+  They share the same Document No (the source document reference) so
+  they can be grouped.
+
+  KEY COLUMNS (as implemented in this version):
+    Entry No        : Sequential system identifier.
+    GL Account No   : Which account this entry belongs to.
+    GL Account Name : Account description for readability.
+    Document Type   : Invoice | Receipt | Payment | etc.
+    Document No     : Source document (links entries to their origin).
+    Posting Date    : Date of the original posting.
+    Description     : Narration of the transaction.
+    Amount          : KES value.
+                      POSITIVE = Debit to this account.
+                      NEGATIVE = Credit to this account.
+
+  DEFAULT SORT: Posting Date, newest first.
+
+  NOTE: The GL Entries form has NO editable fields — it is a pure
+  read-only audit log. There are no Create, Edit, or Delete actions.
+
+--------------------------------------------------------------------------------
+  3.2 DOUBLE-ENTRY VERIFICATION
+--------------------------------------------------------------------------------
+
+  For any given Document No, the sum of all GL entries should always
+  equal ZERO (debits = credits, opposite signs cancel out).
+
+  To verify a specific posting:
+    Filter by Document No → sum the Amount column.
+    Result should be KES 0.00.
+
+  If the sum is NOT zero, a posting error occurred. Contact the
+  system administrator — do not attempt to fix it by creating manual
+  entries.
+
+--------------------------------------------------------------------------------
+  3.3 UNDERSTANDING THE ENTRY COMBINATIONS
+--------------------------------------------------------------------------------
+
+  SALES INVOICE POSTING (for each line):
+    DEBIT  : Receivables Account    (Customer Posting Group)
+    CREDIT : Revenue Account        (Service Posting Group)
+
+  CASH RECEIPT POSTING:
+    DEBIT  : Bank Account           (Bank Posting Group)
+    CREDIT : Receivables Account    (Customer Posting Group)
+
+  PURCHASE ORDER POSTING (for each line):
+    DEBIT  : Expense Account        (Service Posting Group)
+    CREDIT : Payables Account       (Vendor Posting Group)
+
+  VENDOR PAYMENT POSTING:
+    DEBIT  : Payables Account       (Vendor Posting Group)
+    CREDIT : Bank Account           (Bank Posting Group)
+
+  RESULT AFTER A COMPLETE INCOME CYCLE:
+    Invoice + Receipt for the same customer:
+      NET GL movement on Receivables: 0  (DR on invoice, CR on receipt)
+      NET GL movement on Bank:        + (DR — cash received)
+      NET GL movement on Revenue:     - (CR — income recognised)
+    → Bank goes up. Revenue goes up. Receivables net to zero.
+
+  RESULT AFTER A COMPLETE EXPENSE CYCLE:
+    PO + Vendor Payment for the same vendor:
+      NET GL movement on Payables:    0  (CR on PO, DR on payment)
+      NET GL movement on Bank:        - (CR — cash paid out)
+      NET GL movement on Expenses:    + (DR — expense recognised)
+    → Bank goes down. Expense goes up. Payables net to zero.
+
+--------------------------------------------------------------------------------
+  3.4 COMMON INVESTIGATIVE QUERIES
+--------------------------------------------------------------------------------
+
+  "What did we receive from member X this month?"
+    → Customer Ledger, filter Customer = X, Document Type = Payment,
+      Posting Date = current month.
+
+  "What is still owed on invoice INV-000042?"
+    → Customer Ledger, filter Document No = INV-000042.
+      Check Remaining Amount and Is Open.
+
+  "What did we pay vendor V in total this year?"
+    → Vendor Ledger, filter Vendor = V, Document Type = Payment,
+      Posting Date = year range. Sum Amount column.
+
+  "Which GL account has the highest activity this month?"
+    → G/L Entries, filter Posting Date = current month.
+      Group/sort by GL Account No. Sum per account.
+
+  "Did invoice INV-000050 post correctly?"
+    → G/L Entries, filter Document No = INV-000050.
+      Should see two entries (DR Receivables, CR Revenue) summing to 0.
+
+  "What is the current bank balance on account EQUITY-KCB?"
+    → G/L Entries, filter GL Account No = [KCB bank account GL no].
+      Sum all Amount values. Positive sum = current debit balance.
+
+--------------------------------------------------------------------------------
+  3.5 GL ACCOUNTS ALSO VISIBLE FROM THE CHART OF ACCOUNTS
+--------------------------------------------------------------------------------
+
+  Navigate to: Finance — Setup → Chart of Accounts → click any account
+
+  The detail view of a GL account includes a "GL Entries" tab (relation
+  manager) showing all entries posted to that specific account.
+
+  This is often the most convenient way to see activity on a single
+  account (e.g. "show me everything posted to account 4100 this quarter").
+
+
+================================================================================
+  LEDGER INTEGRITY RULES
+================================================================================
+
+  1. NEVER manually insert, edit, or delete ledger entries.
+     All corrections must be made by posting a reversing document
+     (credit memo, journal entry) through the proper workflow.
+
+  2. If a Customer Ledger entry shows the wrong amount, trace it back
+     to the source invoice or receipt and investigate there.
+
+  3. If a GL entry shows an unexpected account, check the posting groups
+     assigned to the customer, vendor, service, or bank account involved.
+
+  4. Ledger entries posted in a prior period should not be edited even
+     if the system allows it — this would distort historical reports.
+     Always post corrections in the current period.
+
+  5. Only use the edit form on open ledger entries as a last resort
+     for apply-entries corrections, and only with finance admin approval.
+
+
+================================================================================
+  QUICK REFERENCE: WHICH LEDGER TO CHECK FOR WHAT
+================================================================================
+
+  QUESTION                                    LEDGER TO CHECK
+  ──────────────────────────────────────────────────────────────────────────
+  What does member X owe right now?           Customer Ledger (filter member)
+  Was receipt REC-000020 applied?             Customer Ledger (filter doc no)
+  Is invoice INV-000030 still open?           Customer Ledger (filter doc no)
+  What does org owe to vendor Y?              Vendor Ledger (filter vendor)
+  Was purchase order PI-000010 paid?          Vendor Ledger (filter doc no)
+  What is the current receivables balance?    G/L Entries (filter receivables
+                                              account, sum amount)
+  What is total income this month?            G/L Entries (filter revenue
+                                              accounts + date range)
+  What is total expenditure this quarter?     G/L Entries (filter expense
+                                              accounts + date range)
+  Did a specific posting balance correctly?   G/L Entries (filter doc no,
+                                              sum = 0 expected)
+
+
+================================================================================
+  END OF DOCUMENT
+================================================================================

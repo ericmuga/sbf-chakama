@@ -2,25 +2,35 @@
 
 namespace App\Services;
 
+use App\Enums\ShareStatus;
 use App\Models\Finance\CashReceipt;
 use App\Models\Finance\SalesHeader;
 use App\Models\Finance\SalesLine;
 use App\Models\ShareSubscription;
+use App\Services\Finance\SalesPostingService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ShareBillingService
 {
-    public function __construct(private ShareService $shareService) {}
+    public function __construct(
+        private ShareService $shareService,
+        private SalesPostingService $salesPostingService,
+    ) {}
 
     public function generateInvoice(ShareSubscription $subscription): SalesHeader
     {
         return DB::transaction(function () use ($subscription) {
             $member = $subscription->member;
             $customer = $member->financeCustomer;
+            $customer?->load('customerPostingGroup');
 
             $header = SalesHeader::create([
                 'customer_id' => $customer?->id,
+                'customer_posting_group_id' => $customer?->customer_posting_group_id,
+                'document_type' => 'invoice',
                 'posting_date' => today(),
+                'due_date' => today()->addDays(30),
                 'status' => 'Open',
                 'share_subscription_id' => $subscription->id,
             ]);
@@ -34,7 +44,9 @@ class ShareBillingService
                 'service_id' => $subscription->billingSchedule?->service_id,
             ]);
 
-            return $header;
+            $this->salesPostingService->post($header);
+
+            return $header->fresh();
         });
     }
 
@@ -46,6 +58,30 @@ class ShareBillingService
         if ($sub->is_fully_paid) {
             $this->shareService->activateSubscription($sub);
         }
+    }
+
+    /**
+     * Generate invoices for admin-scheduled subscriptions whose subscribed_at date has arrived.
+     */
+    public function generateScheduledSubscriptionInvoices(): int
+    {
+        $subscriptions = ShareSubscription::where('status', ShareStatus::PendingPayment)
+            ->where('subscribed_at', '<=', today())
+            ->whereDoesntHave('invoices')
+            ->get();
+
+        $count = 0;
+
+        foreach ($subscriptions as $subscription) {
+            try {
+                $this->generateInvoice($subscription);
+                $count++;
+            } catch (\Throwable $e) {
+                Log::warning("Failed to generate invoice for subscription {$subscription->no}: {$e->getMessage()}");
+            }
+        }
+
+        return $count;
     }
 
     public function generateRecurringInvoices(): int

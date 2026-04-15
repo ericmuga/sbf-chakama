@@ -41,7 +41,7 @@ class MemberPortalScopingTest extends TestCase
             ->assertOk();
     }
 
-    public function test_chakama_only_member_can_access_unified_portal(): void
+    public function test_chakama_only_member_is_denied_sbf_portal(): void
     {
         $user = User::factory()->create();
         Member::factory()->for($user)->create(['is_sbf' => false, 'is_chakama' => true]);
@@ -49,6 +49,17 @@ class MemberPortalScopingTest extends TestCase
         $this->actingAs($user);
 
         $this->get(route('filament.member.pages.member-dashboard'))
+            ->assertForbidden();
+    }
+
+    public function test_chakama_only_member_can_access_chakama_portal(): void
+    {
+        $user = User::factory()->create();
+        Member::factory()->for($user)->create(['is_sbf' => false, 'is_chakama' => true]);
+
+        $this->actingAs($user);
+
+        $this->get(route('filament.chakama-portal.pages.member-dashboard'))
             ->assertOk();
     }
 

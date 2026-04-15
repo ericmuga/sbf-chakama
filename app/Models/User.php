@@ -57,7 +57,8 @@ class User extends Authenticatable implements FilamentUser
         return match ($panel->getId()) {
             'chakama' => $this->is_admin && $this->entity === EntityDimension::Chakama,
             'sbf' => $this->is_admin && in_array($this->entity, [EntityDimension::Sbf, null], true),
-            'member' => (bool) ($this->member?->is_sbf || $this->member?->is_chakama),
+            'member' => (bool) $this->member?->is_sbf,
+            'chakama-portal' => (bool) $this->member?->is_chakama,
             default => false,
         };
     }

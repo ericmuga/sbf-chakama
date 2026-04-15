@@ -11,6 +11,7 @@ use App\Models\ShareBillingSchedule;
 use App\Models\ShareSubscription;
 use BackedEnum;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -45,18 +46,28 @@ class ShareSubscriptionResource extends Resource
     {
         return $schema
             ->components([
-                Section::make('Subscription Details')
-                    ->columns(2)
+                Section::make('Target Members')
+                    ->columns(1)
                     ->schema([
-                        Select::make('member_id')
-                            ->label('Member')
+                        Toggle::make('all_members')
+                            ->label('Target all active Chakama members')
+                            ->live()
+                            ->default(false),
+                        CheckboxList::make('member_ids')
+                            ->label('Members')
                             ->options(
                                 Member::query()
                                     ->where('is_chakama', true)
+                                    ->where('member_status', 'active')
                                     ->pluck('name', 'id')
                             )
                             ->searchable()
-                            ->required(),
+                            ->visible(fn (Get $get): bool => ! $get('all_members'))
+                            ->required(fn (Get $get): bool => ! $get('all_members')),
+                    ]),
+                Section::make('Subscription Details')
+                    ->columns(2)
+                    ->schema([
                         Select::make('billing_schedule_id')
                             ->label('Billing Schedule')
                             ->options(ShareBillingSchedule::where('is_active', true)->pluck('name', 'id'))
@@ -68,6 +79,8 @@ class ShareSubscriptionResource extends Resource
                             ->required()
                             ->default(1),
                         DatePicker::make('subscribed_at')
+                            ->label('Process On')
+                            ->helperText('Set a future date to schedule this subscription batch. Leave as today to process immediately.')
                             ->required()
                             ->default(today()),
                         Toggle::make('is_nominee')

@@ -13,9 +13,10 @@ class GenerateShareInvoices extends Command
 {
     public function handle(ShareBillingService $shareBillingService): int
     {
-        $count = $shareBillingService->generateRecurringInvoices();
+        $recurring = $shareBillingService->generateRecurringInvoices();
+        $scheduled = $shareBillingService->generateScheduledSubscriptionInvoices();
 
-        $this->info("Generated {$count} recurring share invoice(s).");
+        $this->info("Generated {$recurring} recurring + {$scheduled} scheduled share invoice(s).");
 
         return Command::SUCCESS;
     }

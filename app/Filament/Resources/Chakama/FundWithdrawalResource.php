@@ -35,6 +35,8 @@ class FundWithdrawalResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function canViewAny(): bool
     {
         return auth()->user()?->isAdmin() ?? false;

@@ -1,0 +1,676 @@
+================================================================================
+  CHAKAMA RANCH — SOBA ALUMNI PORTAL
+  USER GUIDE (Role-Based)
+  System: SBF-Chakama Portal | Agreement Ref: PHL-SOBA-SDA-2026-001
+  Updated: March 2026
+================================================================================
+
+CONTENTS
+--------
+  A. Overview & Roles
+  B. ROLE: System Administrator (Admin)
+     B1. Initial Setup
+     B2. Managing Share Subscriptions
+     B3. Managing Fund Accounts
+     B4. Managing Fund Withdrawals
+     B5. Approval Chain Management
+  C. ROLE: Approver (Step-Based)
+     C1. Receiving an Approval Request
+     C2. Approving a Fund Withdrawal
+     C3. Rejecting a Fund Withdrawal
+  D. ROLE: Chakama Member (is_chakama = true)
+     D1. Login & Portal Access
+     D2. Dashboard
+     D3. Viewing My Shares
+     D4. Notifications
+  E. ROLE: Dual Member (is_sbf = true AND is_chakama = true)
+  F. ROLE: SBF-Only Member (is_sbf = true, is_chakama = false)
+  G. Automated Processes (Scheduled Commands)
+  H. Glossary
+
+
+================================================================================
+  A. OVERVIEW & ROLES
+================================================================================
+
+The Chakama Ranch module allows SOBA alumni to subscribe to land shares
+(1 share = 10 acres), track their payments, and manage fund disbursements.
+
+It runs inside the SOBA portal at /portal but only surfaces Chakama content
+to members who have the is_chakama flag enabled on their member card.
+
+ROLES IN THIS MODULE:
+  - System Administrator : Full access to all Chakama admin functions
+  - Approver             : A user assigned to one or more approval steps
+                           in a fund withdrawal approval template
+  - Chakama Member       : A portal member with is_chakama = true
+  - Dual Member          : A portal member with BOTH is_sbf and is_chakama
+  - SBF-Only Member      : A portal member with is_sbf = true only
+                           (no Chakama content visible)
+
+PORTAL URLS:
+  Member portal login   : /portal/login
+  Admin panel login     : /admin/login
+
+
+================================================================================
+  B. ROLE: SYSTEM ADMINISTRATOR
+================================================================================
+
+--------------------------------------------------------------------------------
+  B1. INITIAL SETUP (do this before onboarding members)
+--------------------------------------------------------------------------------
+
+STEP 1 — Run the number series seeder
+--------------------------------------
+  From the command line:
+    php artisan db:seed --class=ChakamNumberSeriesSeeder
+
+  This creates three number series:
+    SHARE  → SHR-000001, SHR-000002, ...  (share subscriptions)
+    FWITH  → FW-000001,  FW-000002,  ...  (fund withdrawals)
+    FUND   → FUND-0001,  FUND-0002,  ...  (fund accounts)
+
+  Without this step, share subscriptions and fund withdrawals cannot be
+  numbered and will fail to create.
+
+
+STEP 2 — Create at least one Fund Account
+-------------------------------------------
+  Navigate to: Admin Panel → Chakama — Funds → Fund Accounts → New Fund Account
+
+  Fields:
+    Name         : e.g. "Share Capital Fund" (required)
+    Description  : optional narrative
+    GL Account   : select the GL posting account for this fund
+                   (type to search — only Posting-type GL accounts shown)
+    Active       : leave toggled ON
+
+  On save, the system auto-generates a FUND-xxxx number.
+  The fund starts with a balance of KES 0.00.
+
+  IMPORTANT: You need at least one active fund account before you can
+  create billing schedules or fund withdrawals.
+
+
+STEP 3 — Create a Share Billing Schedule
+------------------------------------------
+  Navigate to: Admin Panel → Chakama — Settings → Share Billing Schedules
+               → New Billing Schedule
+
+  Fields:
+    Name              : e.g. "Standard Share Plan 2026" (required)
+    Price Per Share   : e.g. 50,000.00 (KES — required)
+                        This price is SNAPSHOTTED at the time of subscription.
+                        Changing this later does NOT affect existing subscriptions.
+    Acres Per Share   : default 10 (per the agreement: 1 share = 10 acres)
+    Billing Frequency : One-Time | Monthly | Quarterly | Annually
+                        → One-Time: member is invoiced once, no recurring invoices
+                        → Monthly/Quarterly/Annually: recurring invoices are
+                          generated automatically by scheduled command
+    Fund Account      : select the fund that receives share payments
+    Default Schedule  : toggle ON to make this the pre-selected option
+    Active            : leave ON
+
+  RECOMMENDATION: Create one "Standard Share Plan" with One-Time frequency
+  for initial rollout. Recurring plans can be added later.
+
+
+STEP 4 — Enable Chakama on Member Cards
+-----------------------------------------
+  Navigate to: Admin Panel → Members → (search for member) → Edit
+
+  Toggle ON: "Is Chakama Member" (is_chakama field)
+  Save.
+
+  The member can now log into the portal and see Chakama content.
+  Their existing customer/vendor records in finance are automatically
+  reused — no separate finance setup is needed.
+
+
+--------------------------------------------------------------------------------
+  B2. MANAGING SHARE SUBSCRIPTIONS
+--------------------------------------------------------------------------------
+
+CREATING A SUBSCRIPTION (Admin-initiated)
+------------------------------------------
+  Navigate to: Admin Panel → Chakama — Shares → Share Subscriptions → New
+
+  Form sections:
+
+  [Subscription Details]
+    Member          : search and select (only is_chakama members shown)
+    Billing Schedule: select the active plan
+    Number of Shares: integer ≥ 1 (e.g. 3 for 30 acres)
+    Subscribed At   : date of subscription (defaults to today)
+
+  [Nominee Toggle — optional]
+    If "Share for a Nominee (Third Party)" is toggled ON, additional
+    fields appear:
+      Full Name       : nominee's legal name
+      National ID     : national ID or passport number (must be unique
+                        per member — a member cannot register two nominees
+                        with the same ID)
+      Phone           : optional
+      Email           : optional
+      Relationship    : e.g. "Spouse", "Son", "Business Partner"
+
+  On save, the system:
+    1. Generates a SHR-xxxxxx number
+    2. Snapshots the price from the billing schedule
+    3. Calculates total_amount = shares × price
+    4. Sets is_first_share = true if this member has no prior subscriptions
+       (per the agreement: first share is auto-tagged)
+    5. If nominee: creates a ShareNominee record first, then links it
+    6. Sets status = Pending Payment, amount_paid = 0
+    7. Creates a sales invoice linked to this subscription
+    8. Sends the member an email: "Share Invoice — KES xx,xxx"
+
+SUBSCRIPTION STATUS FLOW:
+  Pending Payment → Active      (when fully paid or manually activated)
+  Active          → Suspended   (admin action or auto at 90-day overdue)
+  Active/Pending  → Transferred (admin transfers to another member)
+  Any             → Cancelled   (manual admin action — not in current UI,
+                                 but available via service)
+
+ACTIVATING A SUBSCRIPTION
+---------------------------
+  Navigate to: Share Subscriptions → view a Pending Payment record
+
+  Click header button: [Activate]
+  → Confirm the prompt.
+  → Status changes to Active.
+  → Member is NOT separately notified at activation (activation notification
+    fires via payment receipt, not manually).
+
+  NOTE: You should only activate manually if you have confirmed payment
+  through an offline channel. Normal flow is: payment is recorded via
+  CashReceipt → amount_paid auto-increments → status auto-activates when
+  fully paid.
+
+SUSPENDING A SUBSCRIPTION
+---------------------------
+  Navigate to: Share Subscriptions → view an Active record
+
+  Click header button: [Suspend]
+  A modal appears asking for a reason (required).
+  → Status changes to Suspended.
+  → Member receives a notification.
+
+  Common reasons: "Payment default", "Member request", "Legal hold"
+
+  To reinstate: click [Activate] on the suspended record.
+
+TRANSFERRING A SUBSCRIPTION
+-----------------------------
+  Navigate to: Share Subscriptions → view an Active or Pending record
+
+  Click header button: [Transfer to Member]
+  A modal appears:
+    New Member : search and select (only is_chakama members shown,
+                 the current member is excluded)
+  → The original subscription is marked Transferred
+  → A NEW subscription is created for the new member:
+     - Same billing schedule, same number of shares, same price
+     - is_first_share = false (it is not their first subscription automatically)
+     - amount_paid = 0 (new member starts fresh — existing payments stay
+       with the original record)
+  → The new member must pay in full under their own subscription.
+
+FILTERING & SEARCHING
+-----------------------
+  On the Share Subscriptions list:
+    Status filter       : Active | Pending Payment | Suspended | Transferred | Cancelled
+    Is Nominee filter   : Yes | No | Any
+    Is First Share filter: Yes | No | Any
+    Search box          : searches member name and subscription number
+
+
+--------------------------------------------------------------------------------
+  B3. MANAGING FUND ACCOUNTS
+--------------------------------------------------------------------------------
+
+VIEWING A FUND ACCOUNT
+------------------------
+  Navigate to: Chakama — Funds → Fund Accounts → click a record
+
+  The view page shows:
+    - Account details (no, name, GL account, balance, active status)
+    - Fund Transactions tab: all inflows and outflows, ordered newest first
+      Columns: date, type (badge), description, amount (positive=inflow,
+      negative=outflow), running balance
+
+  IMPORTANT: Transactions are READ-ONLY in the UI. They are created
+  automatically by services (when payments are recorded, withdrawals are
+  processed, etc.). Do NOT manually create or edit transactions.
+
+EDITING A FUND ACCOUNT
+------------------------
+  Click [Edit] on the view page.
+  You can change name, description, GL account, and active status.
+  You CANNOT manually change the balance — use the recalculate command
+  if the balance drifts (see Section G).
+
+DEACTIVATING A FUND ACCOUNT
+-----------------------------
+  Edit the record and toggle "Active" to OFF.
+  Inactive fund accounts will NOT appear in withdrawal or billing
+  schedule dropdowns. Existing records are not affected.
+
+
+--------------------------------------------------------------------------------
+  B4. MANAGING FUND WITHDRAWALS
+--------------------------------------------------------------------------------
+
+A fund withdrawal is a request to disburse money from a named fund.
+It mirrors the SBF claim process: draft → submit → approval chain → approved.
+
+CREATING A WITHDRAWAL
+----------------------
+  Navigate to: Chakama — Funds → Fund Withdrawals → New
+
+  Form sections:
+
+  [Withdrawal Details]
+    Fund Account   : select from active fund accounts
+    Related Project: optional — link to a project for expenditure tracking
+    Description    : explain purpose (required, up to 500 characters)
+    Amount         : KES amount (required, must be > 0)
+
+  [Payee Details]
+    Payee Name     : legal name of recipient (required)
+    Payment Method : Bank Transfer | M-PESA | Cash
+    → If Bank Transfer: Bank Name, Account Name, Account Number, Branch appear
+    → If M-PESA: M-PESA Phone field appears
+    → If Cash: no additional fields
+
+  On save:
+    - Status = Draft
+    - Number assigned: FW-xxxxxx
+    - Record is editable until submitted
+
+EDITING A DRAFT WITHDRAWAL
+---------------------------
+  Open the withdrawal record → click [Edit].
+  Editing is ONLY possible in Draft status.
+  Once submitted, the record is locked.
+
+SUBMITTING FOR APPROVAL
+------------------------
+  Open the withdrawal record → click [Submit for Approval].
+  Confirm the prompt.
+
+  What happens:
+    1. System finds the default active ClaimApprovalTemplate
+    2. Creates one FundWithdrawalApproval row per step in the template
+       (each has a due_by of 3 days from submission)
+    3. Status changes to Submitted
+    4. The FIRST approver in the chain receives an email notification
+
+  NOTE: The Chakama module reuses the SAME approval templates as SBF claims.
+  To configure approvers, go to: Admin → Claims → Approval Templates.
+  If no template exists, the withdrawal moves to Submitted with no approval
+  rows and must be handled manually.
+
+CANCELLING A WITHDRAWAL
+------------------------
+  Currently available via code (FundWithdrawalService::cancelWithdrawal).
+  No UI button is implemented in this version. To cancel programmatically:
+    php artisan tinker --execute "
+      use App\Services\FundWithdrawalService;
+      use App\Models\FundWithdrawal;
+      use App\Models\User;
+      app(FundWithdrawalService::class)->cancelWithdrawal(
+        FundWithdrawal::find(ID),
+        User::find(ADMIN_ID),
+        'Reason here'
+      );
+    "
+
+
+--------------------------------------------------------------------------------
+  B5. APPROVAL CHAIN MANAGEMENT
+--------------------------------------------------------------------------------
+
+Chakama fund withdrawals reuse the SBF claim approval template system.
+
+TO CONFIGURE AN APPROVAL TEMPLATE:
+  Navigate to: Admin Panel → Claims → Approval Templates → New
+
+  This is the same template used by both SBF claims and Chakama fund
+  withdrawals. If you need separate chains, create two templates and
+  assign the appropriate one when creating the withdrawal (approval_template_id
+  field — currently only settable via the create flow before submission).
+
+APPROVAL STEP FLOW:
+  Each step has:
+    - step_order: sequence (1, 2, 3, ...)
+    - approver_user_id: the user responsible for this step
+    - due_by: auto-set to 3 days after submission
+    - action: Pending → Approved or Rejected
+
+  When all steps are Approved → withdrawal becomes Approved
+  If ANY step is Rejected → withdrawal becomes Rejected immediately,
+  remaining steps are not processed.
+
+
+================================================================================
+  C. ROLE: APPROVER (STEP-BASED)
+================================================================================
+
+An approver is any system user (admin or otherwise) who is assigned to one
+or more steps in an active ClaimApprovalTemplate.
+
+--------------------------------------------------------------------------------
+  C1. RECEIVING AN APPROVAL REQUEST
+--------------------------------------------------------------------------------
+
+When a fund withdrawal is submitted, the first approver receives:
+  - An email: "Approval Required: Fund Withdrawal FW-xxxxxx"
+             Subject includes the withdrawal number, amount, fund account name
+             and which step this is (e.g. "Step 1 of 2")
+  - A database notification (visible in the portal notification bell)
+
+The email contains:
+  - Description of the withdrawal
+  - Amount and payee
+  - A link to the admin panel view page for the withdrawal
+
+
+--------------------------------------------------------------------------------
+  C2. APPROVING A FUND WITHDRAWAL
+--------------------------------------------------------------------------------
+
+  1. Click the link in the email (or navigate manually):
+     Admin Panel → Chakama — Funds → Fund Withdrawals → [find the record]
+
+  2. The [Approve] button will be visible ONLY if:
+     - The withdrawal status is Submitted or Under Review
+     - Your user ID matches the approver_user_id for the CURRENT step
+
+  3. Click [Approve].
+     A modal appears:
+       Comments (optional): add notes for the audit trail
+     Click [Confirm].
+
+  What happens:
+    - Your approval row is marked Approved
+    - current_step advances to the next step
+    - If there are more steps: the NEXT approver receives their notification
+    - If this was the LAST step: withdrawal status → Approved
+      and the person who submitted it receives a notification
+
+  NOTE: If you are NOT the current step's approver, the [Approve] button
+  will not appear for you. Check which step is current by reading the
+  approval rows on the view page.
+
+
+--------------------------------------------------------------------------------
+  C3. REJECTING A FUND WITHDRAWAL
+--------------------------------------------------------------------------------
+
+  1. Open the withdrawal record (same navigation as above)
+  2. Click [Reject].
+     A modal appears:
+       Rejection Reason (required): explain why it is being rejected
+     Click [Confirm].
+
+  What happens:
+    - Your approval row is marked Rejected
+    - Withdrawal status → Rejected immediately (no further steps processed)
+    - rejected_at and rejection_reason are recorded
+    - The person who submitted it receives a rejection notification email
+
+
+================================================================================
+  D. ROLE: CHAKAMA MEMBER (is_chakama = true)
+================================================================================
+
+--------------------------------------------------------------------------------
+  D1. LOGIN & PORTAL ACCESS
+--------------------------------------------------------------------------------
+
+  URL: /portal/login
+
+  The member portal uses the same login credentials as the main system.
+  Your admin must have:
+    1. Created a User account for you (email + password)
+    2. Created a Member (bus_members) record linked to your User
+    3. Toggled "Is Chakama Member" (is_chakama) ON on your member card
+
+  If you try to log in but see a 403 error ("You do not have member portal
+  access"), contact your administrator — your is_chakama flag is not set.
+
+  If you have BOTH is_sbf and is_chakama flags set, you will see content
+  from both modules (see Section E).
+
+
+--------------------------------------------------------------------------------
+  D2. DASHBOARD
+--------------------------------------------------------------------------------
+
+  After login you land on: My Portal (Dashboard)
+
+  As a Chakama-only member you will see:
+
+  [Header — Share Summary Stats]
+    My Shares     : total number of active share units you hold
+    My Acres      : My Shares × 10 (e.g. 3 shares = 30 acres)
+    Amount Paid   : total KES you have paid across all subscriptions
+    Outstanding   : total remaining balance (shown in RED if > 0)
+
+  [Footer — Payments]
+    Recent Payments: your most recent payment receipts
+
+  You will NOT see SBF claims content if you do not have is_sbf set.
+
+
+--------------------------------------------------------------------------------
+  D3. VIEWING MY SHARES
+--------------------------------------------------------------------------------
+
+  Navigate to: My Shares (left sidebar)
+
+  This shows all your share subscriptions (past and present).
+
+  Table columns:
+    No            : subscription reference e.g. SHR-000001
+    Shares        : number of share units
+    Acres         : shares × 10
+    Total         : full price of the subscription in KES
+    Paid          : amount you have paid so far
+    Status        : badge — Pending Payment | Active | Suspended |
+                    Transferred | Cancelled
+    First Share   : tick icon if this is your first-ever subscription
+    Date          : date you subscribed
+
+  STATUS MEANINGS:
+    Pending Payment → Invoice has been generated. Awaiting your payment.
+                      Outstanding balance = Total - Paid.
+    Active          → Fully paid (or manually activated by admin).
+                      Your land acres are confirmed.
+    Suspended       → Subscription paused — typically due to non-payment
+                      (auto at 90 days overdue) or admin action.
+                      Contact your administrator to reinstate.
+    Transferred     → This subscription was transferred to another member.
+                      A new subscription exists for the recipient.
+    Cancelled       → Subscription has been cancelled by admin.
+
+  FILTERING:
+    You can filter by Status to e.g. see only Active subscriptions.
+
+  WHAT YOU CANNOT DO:
+    - You cannot edit, create, or delete subscriptions in the portal.
+    - To buy more shares, contact your administrator or wait for
+      the self-service "Buy More Shares" feature in a future release.
+
+
+--------------------------------------------------------------------------------
+  D4. NOTIFICATIONS
+--------------------------------------------------------------------------------
+
+  The bell icon (top right) shows unread notifications.
+
+  You will receive notifications for:
+
+  1. Share Invoice Generated
+     "Share Invoice SHR-xxxxxx — X share(s) — KES xx,xxx.xx"
+     Triggered when: a new subscription is created for you.
+     Action needed: pay the invoice.
+
+  2. Payment Confirmed
+     "Payment received KES xx,xxx for subscription SHR-xxxxxx"
+     Triggered when: a payment receipt is recorded against your subscription.
+
+  3. Payment Overdue Reminder
+     "Outstanding balance KES xx,xxx for share SHR-xxxxxx"
+     Triggered automatically every Monday if you have had a Pending Payment
+     subscription for more than 30 days.
+     Action needed: make your payment before the 90-day auto-suspension.
+
+  All notifications are also sent to your registered email address.
+  Mark notifications as read by clicking them.
+
+
+================================================================================
+  E. ROLE: DUAL MEMBER (is_sbf = true AND is_chakama = true)
+================================================================================
+
+  A dual member has access to BOTH modules within the same portal session.
+
+  Dashboard:
+    Header: SBF Stats Overview (claims, account balance)
+            + Share Summary (shares, acres, paid, outstanding)
+    Footer: Recent Claims (SBF)
+            + Recent Payments (shared)
+
+  Sidebar navigation:
+    My Claims   → SBF claims (visible because is_sbf = true)
+    My Shares   → Chakama share subscriptions (visible because is_chakama = true)
+    Invoices    → shared across both modules
+    Payments    → shared
+    Statement   → customer ledger (shared)
+    Notifications → shared
+
+  Both sections are fully independent — your claim history and your share
+  history do not affect each other.
+
+
+================================================================================
+  F. ROLE: SBF-ONLY MEMBER (is_sbf = true, is_chakama = false)
+================================================================================
+
+  An SBF-only member logs into the same portal URL (/portal/login).
+
+  They will see:
+    - Dashboard: SBF Stats Overview, Recent Claims, Recent Payments
+    - Sidebar: My Claims, Invoices, Payments, Statement, Notifications
+
+  They will NOT see:
+    - Share Summary widget (hidden because is_chakama = false)
+    - My Shares resource (hidden by shouldRegisterNavigation check)
+    - Any Chakama-related content
+
+  This is enforced at the PHP level — it is not just a UI hide. If an
+  SBF-only member manually navigates to a Chakama URL, the resource will
+  return an empty query result or redirect, not expose other members' data.
+
+
+================================================================================
+  G. AUTOMATED PROCESSES (SCHEDULED COMMANDS)
+================================================================================
+
+The following commands run automatically via the Laravel scheduler.
+No manual action is needed. Listed for reference and troubleshooting.
+
+  1. chakama:generate-invoices
+     Schedule : Daily at 06:00
+     Does     : Finds all Active share subscriptions with a billing
+                frequency other than "One-Time" where next_billing_date
+                is today or earlier. Generates an invoice for each.
+                Advances next_billing_date by the billing period.
+     Used for : Monthly, quarterly, and annual recurring billing plans.
+     Manual   : php artisan chakama:generate-invoices
+
+  2. chakama:check-overdue
+     Schedule : Every Monday at 08:00
+     Does     :
+       Step 1 — Members 30+ days overdue (subscribed > 30 days ago,
+                amount_paid < total_amount, status = Pending Payment):
+                Sends a "Payment Overdue Reminder" email notification.
+       Step 2 — Members 90+ days overdue (same criteria but > 90 days):
+                Auto-suspends the subscription with reason
+                "Overdue 90+ days auto-suspension".
+     Manual   : php artisan chakama:check-overdue
+
+  3. funds:recalculate
+     Schedule : Every Sunday at 00:00
+     Does     : For every fund account, re-sums all fund_transactions.amount
+                and overwrites the cached fund.balance.
+                This is a safety net — normal operations keep balance in sync.
+                Run manually if you suspect a balance discrepancy.
+     Manual   : php artisan funds:recalculate
+
+  TO CHECK THE SCHEDULER IS RUNNING:
+    php artisan schedule:list
+    (should show all three commands with their next run time)
+
+  TO RUN THE SCHEDULER MANUALLY (for testing):
+    php artisan schedule:run
+
+
+================================================================================
+  H. GLOSSARY
+================================================================================
+
+  Share              : 1 unit = 10 acres of Chakama Ranch land.
+                       Purchased by a member under a billing schedule.
+
+  Share Subscription : The record of a member's share purchase.
+                       Tracks number of shares, price, payment status.
+                       Reference: SHR-xxxxxx
+
+  Nominee            : A third party (not a member) for whom a member
+                       buys shares. The member pays; the nominee holds
+                       the acres. Identified by National ID.
+
+  First Share        : The very first subscription ever created for a
+                       member. Auto-tagged (is_first_share = true).
+                       Has no special financial effect — it is a
+                       record-keeping flag per the agreement.
+
+  Billing Schedule   : Configuration for how shares are priced and billed.
+                       Multiple schedules can exist (e.g. one for 2025,
+                       one for 2026 at a different price).
+                       Price is snapshotted at subscription time.
+
+  Fund Account       : A named pool of money (e.g. "Share Capital Fund",
+                       "Development Fund"). Linked to a GL account.
+                       Balance is maintained in real-time by the system.
+
+  Fund Transaction   : An immutable ledger row recording every movement
+                       into or out of a fund account. Never deleted or
+                       edited — only appended.
+
+  Fund Withdrawal    : A request to disburse money from a fund account
+                       to a payee. Requires admin creation and approval
+                       chain sign-off. Reference: FW-xxxxxx
+
+  Approval Template  : A configured sequence of approvers (shared with
+                       SBF claims). Each step has an assigned user and
+                       a 3-day response window.
+
+  Amount Outstanding : total_amount - amount_paid on a subscription.
+                       When this reaches 0, the subscription auto-activates.
+
+  is_chakama         : Boolean flag on a member's card. Controls all
+                       Chakama content visibility in the portal.
+                       Set by an administrator on the member record.
+
+  is_sbf             : Boolean flag for SBF module access. Independent
+                       of is_chakama — both can be true simultaneously.
+
+
+================================================================================
+  END OF DOCUMENT
+================================================================================

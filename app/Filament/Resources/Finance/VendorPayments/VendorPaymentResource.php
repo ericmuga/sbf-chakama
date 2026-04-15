@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Finance\VendorPayments;
 use App\Filament\Resources\Finance\VendorPayments\Pages\CreateVendorPayment;
 use App\Filament\Resources\Finance\VendorPayments\Pages\EditVendorPayment;
 use App\Filament\Resources\Finance\VendorPayments\Pages\ListVendorPayments;
+use App\Filament\Resources\Finance\VendorPayments\Pages\ViewVendorPayment;
 use App\Filament\Resources\Finance\VendorPayments\Schemas\VendorPaymentForm;
 use App\Filament\Resources\Finance\VendorPayments\Tables\VendorPaymentsTable;
 use App\Models\Finance\VendorPayment;
@@ -74,6 +75,7 @@ class VendorPaymentResource extends Resource
         return [
             'index' => ListVendorPayments::route('/'),
             'create' => CreateVendorPayment::route('/create'),
+            'view' => ViewVendorPayment::route('/{record}'),
             'edit' => EditVendorPayment::route('/{record}/edit'),
         ];
     }

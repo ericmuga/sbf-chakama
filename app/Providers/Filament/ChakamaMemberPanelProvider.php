@@ -24,7 +24,7 @@ class ChakamaMemberPanelProvider extends PanelProvider
         return $panel
             ->id('chakama-portal')
             ->path('chakama-portal')
-            ->domain(config('app.chakama_domain'))
+            ->when(config('app.chakama_domain'), fn (Panel $panel) => $panel->domain(config('app.chakama_domain')))
             ->login()
             ->brandName('Chakama Ranch — Member Portal')
             ->colors([

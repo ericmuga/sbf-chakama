@@ -28,7 +28,7 @@ class CustomerLedgerEntriesTable
             ->columns([
                 Split::make([
                     TextColumn::make('entry_no')->label('Entry #')->sortable()->grow(false),
-                    TextColumn::make('customer.name')->label('Customer')->sortable()->searchable(),
+                    TextColumn::make('customer.name')->label('Member')->sortable()->searchable(),
                     TextColumn::make('document_type')->label('Type')->badge()->grow(false),
                     TextColumn::make('document_no')->label('Document No')->sortable()->searchable()->grow(false),
                     TextColumn::make('amount')->label('Amount')->money()->sortable()->grow(false),

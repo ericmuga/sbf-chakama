@@ -9,12 +9,15 @@ use App\Models\Finance\CustomerLedgerEntry;
 use App\Models\Finance\MpesaTransaction;
 use App\Models\Finance\PaymentMethod;
 use App\Models\Finance\SalesHeader;
+use App\Models\ShareSubscription;
 use App\Services\Finance\MpesaService;
 use App\Services\Finance\ReceiptPostingService;
+use App\Services\ShareBillingService;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Url;
 
 class MakePayment extends Page
 {
@@ -38,7 +41,11 @@ class MakePayment extends Page
 
     public string $phone = '';
 
+    #[Url(as: 'amount', except: '')]
     public string $amount = '';
+
+    #[Url(as: 'subscription_id', except: '')]
+    public ?int $subscriptionId = null;
 
     // ─── Step 2: pending (awaiting M-Pesa PIN) ───────────────────────────────
 
@@ -274,6 +281,7 @@ class MakePayment extends Page
                     'mpesa_receipt_no' => $this->mpesaReceiptNo,
                     'mpesa_phone' => $this->confirmedPhone,
                     'status' => 'Open',
+                    'share_subscription_id' => $this->subscriptionId,
                 ]);
 
                 app(ReceiptPostingService::class)->post(
@@ -283,6 +291,13 @@ class MakePayment extends Page
 
                 MpesaTransaction::where('TransID', $this->mpesaReceiptNo)
                     ->update(['is_claimed' => true]);
+
+                if ($this->subscriptionId) {
+                    $subscription = ShareSubscription::find($this->subscriptionId);
+                    if ($subscription) {
+                        app(ShareBillingService::class)->recordPayment($subscription, $receipt);
+                    }
+                }
             });
 
             Notification::make()

@@ -3,6 +3,8 @@
 namespace App\Filament\Member\Resources\CashReceipts\Pages;
 
 use App\Filament\Member\Resources\CashReceipts\CashReceiptResource;
+use App\Models\Finance\CashReceipt;
+use Filament\Actions\Action;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Section;
@@ -11,6 +13,22 @@ use Filament\Schemas\Schema;
 class ViewCashReceipt extends ViewRecord
 {
     protected static string $resource = CashReceiptResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        /** @var CashReceipt $record */
+        $record = $this->getRecord();
+
+        return [
+            Action::make('downloadPdf')
+                ->label('Download Receipt')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->visible(fn (): bool => strtolower($record->status) === 'posted')
+                ->url(fn (): string => route('admin.reports.receipt.pdf', $record))
+                ->openUrlInNewTab(),
+        ];
+    }
 
     public function infolist(Schema $schema): Schema
     {

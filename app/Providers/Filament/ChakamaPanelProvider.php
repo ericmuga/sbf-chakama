@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Resources\Chakama\FundAccountResource;
+use App\Filament\Resources\Chakama\FundsBankAccountResource;
 use App\Filament\Resources\Chakama\FundWithdrawalResource;
 use App\Filament\Resources\Chakama\ShareBillingScheduleResource;
 use App\Filament\Resources\Chakama\ShareSubscriptionResource;
@@ -25,6 +26,7 @@ use App\Filament\Resources\Finance\VendorPayments\VendorPaymentResource;
 use App\Filament\Resources\Finance\VendorPostingGroups\VendorPostingGroupResource;
 use App\Filament\Resources\Finance\Vendors\VendorResource;
 use App\Filament\Resources\Members\MemberResource;
+use App\Filament\Resources\Projects\ProjectResource;
 use App\Filament\Resources\UserResource;
 use App\Filament\Widgets\FinanceStatsOverview;
 use App\Filament\Widgets\LatestNotificationsWidget;
@@ -61,9 +63,12 @@ class ChakamaPanelProvider extends PanelProvider
                 // Members
                 MemberResource::class,
                 UserResource::class,
+                // Projects
+                ProjectResource::class,
                 // Chakama — Shares & Funds
                 ShareSubscriptionResource::class,
                 ShareBillingScheduleResource::class,
+                FundsBankAccountResource::class,
                 FundAccountResource::class,
                 FundWithdrawalResource::class,
                 // Finance
@@ -90,6 +95,7 @@ class ChakamaPanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->navigationGroups([
+                NavigationGroup::make('Project Management'),
                 NavigationGroup::make('Chakama — Shares'),
                 NavigationGroup::make('Chakama — Funds'),
                 NavigationGroup::make('Chakama — Settings'),

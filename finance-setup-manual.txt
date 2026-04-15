@@ -1,0 +1,459 @@
+================================================================================
+  SOBA ALUMNI PORTAL — FINANCE MODULE
+  USER MANUAL: FINANCE — SETUP
+  Admin Panel Navigation Group: "Finance — Setup"
+================================================================================
+
+This manual covers every item in the Finance — Setup navigation group.
+Setup is the foundation of the entire finance module. Items here must be
+configured BEFORE you can process any invoice, receipt, payment, or ledger
+entry. Work through the sections in the order they appear below.
+
+RECOMMENDED SETUP ORDER:
+  1.  Chart of Accounts
+  2.  Number Series
+  3.  Services
+  4.  Service Posting Groups
+  5.  Customer Posting Groups
+  6.  Vendor Posting Groups
+  7.  General Posting Setup
+  8.  Sales Setup
+  9.  Purchase Setup
+  10. Bank Accounts
+  11. Payment Methods
+  12. Customers
+  13. Vendors
+
+================================================================================
+  1. CHART OF ACCOUNTS
+  Nav path: Finance — Setup → Chart of Accounts
+================================================================================
+
+WHAT IT IS:
+  The master list of General Ledger (GL) accounts. Every financial
+  transaction eventually posts a debit and a credit to two GL accounts.
+  This list is the backbone of your financial reporting.
+
+FIELDS:
+  Account No   : Unique identifier, max 20 characters. Use a structured
+                 numbering scheme, e.g.:
+                   1000–1999  Assets
+                   2000–2999  Liabilities
+                   3000–3999  Equity / Capital
+                   4000–4999  Income / Revenue
+                   5000–5999  Expenses
+  Name         : Descriptive name (required). E.g. "SBF Receivables",
+                 "Share Capital", "Administration Expenses".
+  Account Type : Controls whether the account can receive postings.
+                   Posting    → receives actual debit/credit entries
+                                (most accounts are this type)
+                   Heading    → a title row for grouping in reports, no entries
+                   Begin-Total→ marks the start of a summed range
+                   End-Total  → marks the end, shows the subtotal
+                   Total      → manually specified total formula
+
+IMPORTANT RULES:
+  - Only accounts with type "Posting" can be referenced by posting groups,
+    payment methods, bank accounts, or services.
+  - You cannot delete an account that has existing GL entries.
+  - Account No must be unique across the entire chart.
+
+COMMON ACCOUNTS TO CREATE AT MINIMUM:
+  - Receivables account (e.g. 1100) — used by Customer Posting Groups
+  - Payables account (e.g. 2100) — used by Vendor Posting Groups
+  - Bank/Cash account (e.g. 1010) — used by Bank Accounts
+  - Revenue accounts per service type (e.g. 4100 SBF Claims Income,
+    4200 Share Subscription Income)
+  - Expense accounts per category (e.g. 5100 SBF Disbursements,
+    5200 Fund Withdrawals)
+
+
+================================================================================
+  2. NUMBER SERIES
+  Nav path: Finance — Setup → Number Series
+================================================================================
+
+WHAT IT IS:
+  Configures the auto-numbering for every document type in the system.
+  When an invoice, receipt, or member is created, the system pulls the
+  next number from the relevant series.
+
+FIELDS:
+  Code              : Short identifier used in code to reference this series,
+                      e.g. INVOICE, RECEIPT, MEMBER, VENDOR, SHARE, FWITH.
+                      Max 50 characters. Must be unique.
+  Description       : Human-readable name, e.g. "Sales Invoice Numbers"
+  Prefix            : Prepended to every generated number, e.g. "INV-",
+                      "REC-", "SHR-". Max 20 characters.
+  Last No           : The last number issued. The next number will be
+                      Last No + 1. Set to 0 for a fresh series.
+                      WARNING: Do not lower this value on a live system —
+                      it will cause duplicate numbers.
+  Length            : Total digits after the prefix, zero-padded.
+                      E.g. length 6 with last_no 0 → next is "000001",
+                      giving "INV-000001".
+  Manual Allowed    : If ON, users can type a custom number instead of
+                      using the auto-generated one.
+  Prevent Repeats   : If ON, the system will refuse to issue a number
+                      that has already been used (adds uniqueness check).
+  Active            : Inactive series cannot be used for new documents.
+
+SERIES REQUIRED BY THE SYSTEM:
+  Code         Prefix    Length  Used For
+  ─────────────────────────────────────────────────────────────────────
+  INVOICE      INV-      6       Sales invoices (sales_setups.invoice_nos)
+  POSTED-INV   PINV-     6       Posted sales invoices
+  RECEIPT      REC-      6       Cash receipts (sales_setups.receipt_nos)
+  CUSTOMER     CUST-     6       Customer records
+  MEMBER       MBR-      6       Member records
+  VENDOR       VEND-     6       Vendor records
+  PINVOICE     PI-       6       Purchase invoices
+  PROJ         PROJ-     5       Projects
+  DCOST        DC-       6       Direct costs
+  SHARE        SHR-      6       Share subscriptions
+  FWITH        FW-       6       Fund withdrawals
+  FUND         FUND-     4       Fund accounts
+  CLAIM        CLM-      6       SBF Claims
+
+  IMPORTANT: After creating each series, link it in the relevant Setup
+  screen (Sales Setup or Purchase Setup — see sections 8 and 9).
+
+
+================================================================================
+  3. SERVICES
+  Nav path: Finance — Setup → Services
+================================================================================
+
+WHAT IT IS:
+  A service is a line-item type that can appear on a sales invoice or
+  a purchase order. It carries a default unit price and links to posting
+  rules that determine which GL accounts the transaction hits.
+
+FIELDS:
+  Code                  : Short unique identifier, max 20 characters.
+                          E.g. "MEMBERSHIP-FEE", "SHARE-SUB", "CLAIM-REIMB"
+  Description           : The name that appears on invoice lines.
+  Unit Price            : Default price (KES). Can be overridden per line.
+  Service Posting Group : Which GL accounts to debit/credit when this
+                          service is sold or purchased. (See section 4.)
+  Sellable              : Toggle ON if this service can appear on sales
+                          invoices (income side). ON by default.
+  Purchasable           : Toggle ON if this service can appear on purchase
+                          orders (expense side). OFF by default.
+
+GUIDANCE:
+  - A service can be both Sellable and Purchasable simultaneously.
+  - If Sellable is OFF, it will not appear in the invoice line service
+    dropdown.
+  - If Purchasable is OFF, it will not appear in the purchase order
+    line service dropdown.
+  - The Unit Price is a default — operators can change it per transaction.
+
+
+================================================================================
+  4. SERVICE POSTING GROUPS
+  Nav path: Finance — Setup → Service Posting Groups
+================================================================================
+
+WHAT IT IS:
+  Defines which GL accounts are credited (for sales) and debited
+  (for purchases) when a service is invoiced or purchased.
+
+FIELDS:
+  Code               : Unique identifier, max 50 characters.
+                       E.g. "MEMBERSHIP", "SHARES", "CLAIMS"
+  Description        : Human-readable label.
+  Revenue Account No : GL account credited when this service is SOLD.
+                       Must be a Posting-type GL account.
+                       Required for sellable services.
+  Expense Account No : GL account debited when this service is PURCHASED.
+                       Must be a Posting-type GL account.
+                       Required for purchasable services.
+
+EXAMPLE:
+  Code        : SHARE-INCOME
+  Description : Share Subscription Revenue
+  Revenue Acc : 4200  (e.g. "Share Capital Contributions")
+  Expense Acc : (blank — shares are not purchased)
+
+POSTING LOGIC:
+  When a share subscription invoice is posted:
+    DR  Customer Receivables (from Customer Posting Group)
+    CR  Revenue Account No   (from this Service Posting Group)
+
+
+================================================================================
+  5. CUSTOMER POSTING GROUPS
+  Nav path: Finance — Setup → Customer Posting Groups
+================================================================================
+
+WHAT IT IS:
+  Controls which GL account is debited when a customer (member) is
+  invoiced. The Receivables Account is the balance-sheet account that
+  represents money owed TO the organisation by its members.
+
+FIELDS:
+  Code                      : Unique identifier. E.g. "MEMBER", "EXTERNAL"
+  Description               : E.g. "SOBA Member Receivables"
+  Receivables Account No    : GL account debited on invoice posting.
+                              Required. Must be a Posting-type GL account.
+                              E.g. 1100 — "Member Receivables"
+  Service Charge Account No : GL account for service charges if applicable.
+                              Optional.
+
+MINIMUM SETUP:
+  You need at least one Customer Posting Group (e.g. "MEMBER") before
+  you can create customer records or post sales invoices.
+
+POSTING LOGIC (when invoice is posted):
+  DR  Receivables Account No     (Customer Posting Group)
+  CR  Revenue Account No         (Service Posting Group of line item)
+
+
+================================================================================
+  6. VENDOR POSTING GROUPS
+  Nav path: Finance — Setup → Vendor Posting Groups
+================================================================================
+
+WHAT IT IS:
+  Controls which GL account is credited when a vendor (payee) is owed
+  money. The Payables Account represents money the organisation OWES.
+
+FIELDS:
+  Code               : Unique identifier. E.g. "MEMBER", "SUPPLIER"
+  Description        : E.g. "Member Reimbursements Payable"
+  Payables Account No: GL account credited on purchase invoice posting.
+                       Required. Must be a Posting-type GL account.
+                       E.g. 2100 — "Accounts Payable"
+
+MINIMUM SETUP:
+  At least one Vendor Posting Group (e.g. "MEMBER") is required before
+  you can create vendor records or post purchase orders.
+
+POSTING LOGIC (when purchase invoice is posted):
+  DR  Expense Account No     (Service Posting Group of line item)
+  CR  Payables Account No    (Vendor Posting Group)
+
+
+================================================================================
+  7. GENERAL POSTING SETUP
+  Nav path: Finance — Setup → General Posting Setup
+================================================================================
+
+WHAT IT IS:
+  A cross-reference table that maps a combination of Customer Posting
+  Group + Service Posting Group to specific GL accounts.
+  Used for advanced double-entry routing on complex document types.
+
+FIELDS:
+  Customer Posting Group : Select from existing customer posting groups.
+  Service Posting Group  : Select from existing service posting groups.
+  Sales Account No       : GL account credited for sales transactions
+                           matching this combination.
+
+NOTE:
+  For most SOBA use cases, the simpler Customer Posting Group +
+  Service Posting Group configuration is sufficient. General Posting
+  Setup is only needed when different member types or service categories
+  need to route to different revenue accounts beyond what posting groups
+  alone can achieve.
+
+
+================================================================================
+  8. SALES SETUP
+  Nav path: Finance — Setup → Sales Setup
+================================================================================
+
+WHAT IT IS:
+  The master configuration for the sales (income) side of finance.
+  Links each document type to its number series.
+
+FIELDS:
+  Invoice Number Series        : Number series used when creating NEW
+                                 (unposted) sales invoices.
+  Posted Invoice Number Series : Number series used when a sales invoice
+                                 is POSTED to the ledger.
+                                 This assigns a permanent posted reference.
+  Customer Number Series       : Auto-number for new Customer records.
+  Member Number Series         : Auto-number for new Member records.
+  Receipt Number Series        : Auto-number for new Cash Receipts.
+
+IMPORTANT:
+  - If a number series field is blank, the system CANNOT create documents
+    of that type automatically and may throw an error.
+  - Only one Sales Setup record is supported. Edit the existing one;
+    do not create duplicates.
+  - After changing a number series here, the next created document will
+    use the newly linked series from its current last_no.
+
+
+================================================================================
+  9. PURCHASE SETUP
+  Nav path: Finance — Setup → Purchase Setup
+================================================================================
+
+WHAT IT IS:
+  The master configuration for the purchasing (expense) side.
+
+FIELDS:
+  Invoice Number Series        : Number series for new (unposted) purchase
+                                 invoices / orders.
+  Posted Invoice Number Series : Number series for posted purchase invoices.
+  Vendor Number Series         : Auto-number for new Vendor records.
+
+  (Additional Chakama fields)
+  Fund Withdrawal Nos          : Number series used for fund withdrawal
+                                 reference numbers (FW-xxxxxx).
+
+IMPORTANT:
+  - Same single-record rule as Sales Setup.
+  - Without vendor_nos linked, creating a new vendor will not auto-number
+    the vendor record.
+
+
+================================================================================
+  10. BANK ACCOUNTS
+  Nav path: Finance — Setup → Bank Accounts
+================================================================================
+
+WHAT IT IS:
+  Represents the organisation's physical bank accounts and M-PESA
+  collection accounts. Each account links to a GL account so that
+  deposits and payments are reflected in the balance sheet.
+
+FIELDS:
+  Code              : Short unique code for internal reference.
+                      E.g. "EQUITY-KCB", "MPESA-PAYBILL"
+  Name              : Full descriptive name.
+                      E.g. "KCB Equity Account 1234567"
+  Bank Account No   : Actual bank account number or paybill/till number.
+  Bank Posting Group: Links to a GL account for postings.
+                      NOTE: A "Bank Posting Group" resource must exist
+                      first (not in the current Finance — Setup menu;
+                      create via code/seeder if not shown in UI).
+  Currency Code     : Defaults to "KES". Change for foreign-currency
+                      accounts.
+
+GUIDANCE:
+  - Create one record per physical bank/M-PESA account used by the
+    organisation.
+  - Payment Methods (section 11) reference Bank Accounts to determine
+    where cash receipts land.
+  - GL entries for bank transactions debit/credit the GL account linked
+    through the Bank Posting Group.
+
+
+================================================================================
+  11. PAYMENT METHODS
+  Nav path: Finance — Setup → Payment Methods
+================================================================================
+
+WHAT IT IS:
+  Defines how a payment was made (e.g. M-PESA, Bank Transfer, Cash)
+  and which bank account the funds land in.
+
+FIELDS:
+  Code               : Unique identifier. E.g. "MPESA", "BANK-TRANSFER",
+                       "CASH", "CHEQUE"
+  Description        : Display name shown on receipts.
+  Default Bank Account: The bank account that receives funds when this
+                        method is used. Nullable — if blank, the operator
+                        must select a bank account manually on each receipt.
+
+GUIDANCE:
+  - Create one method per payment channel you accept.
+  - Setting a Default Bank Account speeds up receipt data entry by
+    pre-filling the bank account field.
+  - The payment method selected on a Cash Receipt affects the GL posting
+    path via the linked Bank Account's Bank Posting Group.
+
+EXAMPLE RECORDS:
+  Code          Description         Default Bank Account
+  ─────────────────────────────────────────────────────
+  MPESA         M-PESA Payment      MPESA-PAYBILL
+  BANK-TRF      Bank Transfer       EQUITY-KCB
+  CASH          Cash Payment        CASH-PETTY
+
+
+================================================================================
+  12. CUSTOMERS
+  Nav path: Finance — Setup → Customers
+================================================================================
+
+WHAT IT IS:
+  Customer records represent the entities that owe money to the
+  organisation (i.e., members and other invoiced parties).
+
+  NOTE: For SOBA members, Customer records are created AUTOMATICALLY
+  when a new Member is saved, provided the Customer Number Series is
+  configured in Sales Setup and a "MEMBER" Customer Posting Group exists.
+  You should NOT normally need to create customers manually.
+
+FIELDS:
+  Customer No          : Auto-generated from the Customer Number Series.
+                         Can be entered manually if Manual Allowed is ON.
+  Name                 : Customer/member name (required).
+  Customer Posting Group: Determines the Receivables GL account.
+                          Required.
+  Payment Terms Code   : Optional. Links to a payment terms record if
+                         due-date calculations are needed.
+
+WHEN TO CREATE MANUALLY:
+  - For non-member invoiced parties (e.g. event sponsors, external bodies).
+  - If the auto-creation on member save fails (check Sales Setup config).
+
+VIEW PAGE:
+  The Customer list shows Customer No, Name, Posting Group, and
+  Payment Terms. Use the search box to find by name or number.
+
+
+================================================================================
+  13. VENDORS
+  Nav path: Finance — Setup → Vendors
+================================================================================
+
+WHAT IT IS:
+  Vendor records represent entities to whom the organisation makes
+  payments (payees on purchase orders and vendor payment records).
+
+  NOTE: Like Customers, Vendor records for SOBA members are created
+  AUTOMATICALLY when a Member is saved, provided Vendor Number Series
+  is configured in Purchase Setup and a "MEMBER" Vendor Posting Group
+  exists.
+
+FIELDS:
+  Vendor No          : Auto-generated from the Vendor Number Series.
+  Name               : Vendor / payee name (required).
+  Vendor Posting Group: Determines the Payables GL account. Required.
+  Payment Terms Code : Optional.
+
+WHEN TO CREATE MANUALLY:
+  - External suppliers (office supplies, printing, events venues).
+  - Service providers paid from organisational funds.
+  - Any payee on a purchase order who is NOT a SOBA member.
+
+
+================================================================================
+  SETUP CHECKLIST (print and tick off)
+================================================================================
+
+  [ ] Chart of Accounts created (min: receivables, payables, bank, revenue,
+      expense accounts)
+  [ ] Number Series created for: INVOICE, RECEIPT, CUSTOMER, MEMBER,
+      VENDOR, PINVOICE, SHARE, FWITH, FUND, CLAIM, PROJ
+  [ ] Services created for each billable/purchasable item type
+  [ ] Service Posting Groups created and linked to services
+  [ ] Customer Posting Group "MEMBER" created with receivables account
+  [ ] Vendor Posting Group "MEMBER" created with payables account
+  [ ] General Posting Setup configured (if using cross-matrix routing)
+  [ ] Sales Setup: all number series fields linked
+  [ ] Purchase Setup: all number series fields linked
+  [ ] Bank Accounts created for each physical account
+  [ ] Payment Methods created (MPESA, BANK-TRF, CASH minimum)
+  [ ] Test: create a member → confirm customer + vendor records auto-created
+  [ ] Test: create an invoice → confirm number generated from series
+
+
+================================================================================
+  END OF DOCUMENT
+================================================================================
