@@ -13,7 +13,7 @@ Tech Stack
 # Step 0 — Database Schema (DONE)
 
 use db.md
-# Step 1 — Authentication (done)
+
 # Step 1 — Authentication (done)
 
 Install Laravel Breeze.
@@ -61,6 +61,7 @@ contact preference
 Link to member via `NextOfKin` model relationship.
 
 Create Filament NextOfKinResource with member relationship.
+
 
 
 # Step 3 — Member Profile
