@@ -11,6 +11,9 @@ Artisan::command('inspire', function () {
 // Generate recurring Chakama share invoices based on billing schedules
 Schedule::command('chakama:generate-invoices')->dailyAt('06:00');
 
+// Auto-process Chakama share billing runs whose billing date has arrived
+Schedule::command('chakama:process-billing-runs')->dailyAt('06:30');
+
 // Check and notify overdue Chakama share payments, auto-suspend 90+ days overdue
 Schedule::command('chakama:check-overdue')->dailyAt('07:00');
 

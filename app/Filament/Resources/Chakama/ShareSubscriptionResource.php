@@ -4,12 +4,14 @@ namespace App\Filament\Resources\Chakama;
 
 use App\Enums\ShareStatus;
 use App\Filament\Resources\Chakama\Pages\CreateShareSubscription;
+use App\Filament\Resources\Chakama\Pages\EditShareSubscription;
 use App\Filament\Resources\Chakama\Pages\ListShareSubscriptions;
 use App\Filament\Resources\Chakama\Pages\ViewShareSubscription;
 use App\Models\Member;
 use App\Models\ShareBillingSchedule;
 use App\Models\ShareSubscription;
 use BackedEnum;
+use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
@@ -33,9 +35,11 @@ class ShareSubscriptionResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMap;
 
+    protected static ?string $navigationLabel = 'Member Allocations';
+
     protected static \UnitEnum|string|null $navigationGroup = 'Chakama — Shares';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
 
     public static function canViewAny(): bool
     {
@@ -154,6 +158,9 @@ class ShareSubscriptionResource extends Resource
             ])
             ->recordActions([
                 ViewAction::make(),
+                EditAction::make()
+                    ->label('Edit Allocation')
+                    ->tooltip('Edit share allocation for this member'),
             ])
             ->defaultSort('id', 'desc');
     }
@@ -169,6 +176,7 @@ class ShareSubscriptionResource extends Resource
             'index' => ListShareSubscriptions::route('/'),
             'create' => CreateShareSubscription::route('/create'),
             'view' => ViewShareSubscription::route('/{record}'),
+            'edit' => EditShareSubscription::route('/{record}/edit'),
         ];
     }
 }

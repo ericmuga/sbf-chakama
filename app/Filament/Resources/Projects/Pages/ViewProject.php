@@ -5,7 +5,6 @@ namespace App\Filament\Resources\Projects\Pages;
 use App\Enums\DirectCostType;
 use App\Enums\ProjectMemberRole;
 use App\Enums\ProjectStatus;
-use App\Filament\Resources\Finance\PurchaseHeaders\PurchaseHeaderResource;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Filament\Widgets\Projects\BudgetVsActualChart;
 use App\Filament\Widgets\Projects\CostBreakdownChart;
@@ -44,7 +43,7 @@ class ViewProject extends ViewRecord
             Action::make('create_purchase_order')
                 ->label('Purchase Invoice')
                 ->icon('heroicon-o-shopping-cart')
-                ->url(fn (Project $record): string => PurchaseHeaderResource::getUrl('create', [
+                ->url(fn (Project $record): string => route('filament.sbf.resources.finance.purchase-headers.create', [
                     'project' => $record->id,
                 ])),
             Action::make('add_direct_cost')

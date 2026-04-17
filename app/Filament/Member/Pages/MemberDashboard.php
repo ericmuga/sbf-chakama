@@ -2,6 +2,7 @@
 
 namespace App\Filament\Member\Pages;
 
+use App\Filament\Member\Widgets\Member\ShareComparisonChart;
 use App\Filament\Member\Widgets\MemberPaymentHistoryChart;
 use App\Filament\Member\Widgets\MemberStatsOverview;
 use App\Filament\Member\Widgets\RecentClaimsWidget;
@@ -39,6 +40,7 @@ class MemberDashboard extends Page
 
         if ($member?->is_chakama) {
             $widgets[] = ShareSummaryWidget::class;
+            $widgets[] = ShareComparisonChart::class;
         }
 
         return $widgets;

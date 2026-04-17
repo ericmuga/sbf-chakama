@@ -2,9 +2,11 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\Chakama\ChakamaMemberReports\ChakamaMemberReportResource;
 use App\Filament\Resources\Chakama\FundAccountResource;
 use App\Filament\Resources\Chakama\FundsBankAccountResource;
 use App\Filament\Resources\Chakama\FundWithdrawalResource;
+use App\Filament\Resources\Chakama\ShareBillingRuns\ShareBillingRunResource;
 use App\Filament\Resources\Chakama\ShareBillingScheduleResource;
 use App\Filament\Resources\Chakama\ShareSubscriptionResource;
 use App\Filament\Resources\Finance\BankAccounts\BankAccountResource;
@@ -68,6 +70,8 @@ class ChakamaPanelProvider extends PanelProvider
                 // Chakama — Shares & Funds
                 ShareSubscriptionResource::class,
                 ShareBillingScheduleResource::class,
+                ShareBillingRunResource::class,
+                ChakamaMemberReportResource::class,
                 FundsBankAccountResource::class,
                 FundAccountResource::class,
                 FundWithdrawalResource::class,
@@ -103,6 +107,7 @@ class ChakamaPanelProvider extends PanelProvider
                 NavigationGroup::make('Finance — Expenses & Payments'),
                 NavigationGroup::make('Finance — Ledgers'),
                 NavigationGroup::make('Finance — Setup'),
+                NavigationGroup::make('Chakama — Reports'),
                 NavigationGroup::make('Administration'),
             ])
             ->databaseNotifications()

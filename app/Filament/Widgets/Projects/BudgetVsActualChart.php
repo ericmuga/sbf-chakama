@@ -30,17 +30,18 @@ class BudgetVsActualChart extends ChartWidget
             return ['datasets' => [], 'labels' => []];
         }
 
+        // Single query for all account actuals instead of N+1
+        $accountNos = $budgetLines->pluck('gl_account_no')->filter()->unique()->values();
+        $actuals = DB::table('gl_entries')
+            ->where('project_id', $project->id)
+            ->whereIn('account_no', $accountNos)
+            ->groupBy('account_no')
+            ->selectRaw('account_no, COALESCE(SUM(debit_amount) - SUM(credit_amount), 0) as net')
+            ->pluck('net', 'account_no');
+
         $labels = $budgetLines->map(fn ($line) => $line->description ?: $line->gl_account_no)->toArray();
-
         $budgeted = $budgetLines->map(fn ($line) => (float) $line->budgeted_amount)->toArray();
-
-        $actual = $budgetLines->map(function ($line) use ($project) {
-            return (float) DB::table('gl_entries')
-                ->where('project_id', $project->id)
-                ->where('account_no', $line->gl_account_no)
-                ->selectRaw('COALESCE(SUM(debit_amount) - SUM(credit_amount), 0) as net')
-                ->value('net');
-        })->toArray();
+        $actual = $budgetLines->map(fn ($line) => (float) ($actuals[$line->gl_account_no] ?? 0))->toArray();
 
         return [
             'labels' => $labels,
