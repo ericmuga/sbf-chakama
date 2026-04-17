@@ -28,6 +28,7 @@ use App\Models\User;
 use App\Notifications\AddedToProjectNotification;
 use App\Services\ProjectCostService;
 use App\Services\ProjectService;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
@@ -46,9 +47,10 @@ class ProjectFilamentTest extends TestCase
     {
         parent::setUp();
 
-        $this->admin = User::factory()->admin()->create();
+        $this->admin = User::factory()->chakamaAdmin()->create();
         $this->projectService = app(ProjectService::class);
         $this->actingAs($this->admin);
+        Filament::setCurrentPanel(Filament::getPanel('chakama'));
 
         NumberSeries::factory()->create([
             'code' => 'PROJ',
@@ -116,7 +118,7 @@ class ProjectFilamentTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            ->get('/admin/projects')
+            ->get('/chakama/projects')
             ->assertForbidden();
     }
 
