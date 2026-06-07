@@ -10,6 +10,8 @@ use App\Filament\Resources\Members\RelationManagers\DocumentsRelationManager;
 use App\Filament\Resources\Members\RelationManagers\NextOfKinRelationManager;
 use App\Filament\Resources\Members\Schemas\MemberForm;
 use App\Filament\Resources\Members\Tables\MembersTable;
+use App\Models\Finance\Customer;
+use App\Models\Finance\CustomerLedgerEntry;
 use App\Models\Member;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -75,5 +77,27 @@ class MemberResource extends Resource
     public static function canEdit(Model $record): bool
     {
         return auth()->user()?->isAdmin() ?? false;
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        if (! (auth()->user()?->isAdmin() ?? false)) {
+            return false;
+        }
+
+        // Prevent an admin from deleting their own member record
+        if (auth()->user()?->member?->id === $record->id) {
+            return false;
+        }
+
+        // Prevent deletion if the member has any ledger entries
+        if ($record->customer_no) {
+            $customer = Customer::where('no', $record->customer_no)->first();
+            if ($customer && CustomerLedgerEntry::where('customer_id', $customer->id)->exists()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

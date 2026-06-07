@@ -12,6 +12,7 @@ class ShareBillingRun extends Model
     protected $fillable = [
         'title',
         'billing_schedule_id',
+        'member_group_id',
         'billing_date',
         'due_date',
         'status',
@@ -39,6 +40,11 @@ class ShareBillingRun extends Model
     public function billingSchedule(): BelongsTo
     {
         return $this->belongsTo(ShareBillingSchedule::class, 'billing_schedule_id');
+    }
+
+    public function memberGroup(): BelongsTo
+    {
+        return $this->belongsTo(MemberGroup::class, 'member_group_id');
     }
 
     public function createdBy(): BelongsTo

@@ -6,6 +6,7 @@ use App\Filament\Resources\Chakama\ShareBillingRuns\Pages\CreateShareBillingRun;
 use App\Filament\Resources\Chakama\ShareBillingRuns\Pages\ListShareBillingRuns;
 use App\Filament\Resources\Chakama\ShareBillingRuns\Pages\ViewShareBillingRun;
 use App\Jobs\ProcessShareBillingRunJob;
+use App\Models\MemberGroup;
 use App\Models\ShareBillingRun;
 use App\Models\ShareBillingSchedule;
 use BackedEnum;
@@ -73,6 +74,12 @@ class ShareBillingRunResource extends Resource
                             ->options(ShareBillingSchedule::where('is_active', true)->pluck('name', 'id'))
                             ->searchable()
                             ->required(),
+                        Select::make('member_group_id')
+                            ->label('Member List (optional)')
+                            ->options(MemberGroup::where('is_active', true)->pluck('name', 'id'))
+                            ->searchable()
+                            ->nullable()
+                            ->helperText('Restrict billing to members in this list. Members in the list without an existing allocation will be auto-given a 1-share allocation on this schedule.'),
                         DatePicker::make('billing_date')
                             ->label('Billing Date')
                             ->required()
@@ -102,6 +109,10 @@ class ShareBillingRunResource extends Resource
                 TextColumn::make('billingSchedule.name')
                     ->label('Schedule')
                     ->sortable(),
+                TextColumn::make('memberGroup.name')
+                    ->label('Member List')
+                    ->placeholder('All allocated')
+                    ->toggleable(),
                 TextColumn::make('billing_date')
                     ->label('Billing Date')
                     ->date('d M Y')
@@ -166,7 +177,9 @@ class ShareBillingRunResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            RelationManagers\InvoicesRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

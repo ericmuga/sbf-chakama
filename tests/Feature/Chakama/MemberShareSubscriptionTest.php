@@ -4,7 +4,6 @@ namespace Tests\Feature\Chakama;
 
 use App\Enums\ShareBillingFrequency;
 use App\Enums\ShareStatus;
-use App\Filament\Member\Resources\Shares\Pages\ListMyShares;
 use App\Models\Finance\NumberSeries;
 use App\Models\FundAccount;
 use App\Models\Member;
@@ -13,7 +12,6 @@ use App\Models\ShareSubscription;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
 use Tests\TestCase;
 
 class MemberShareSubscriptionTest extends TestCase
@@ -82,32 +80,11 @@ class MemberShareSubscriptionTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_member_can_subscribe_to_share_via_portal(): void
+    public function test_member_portal_does_not_expose_subscribe_action(): void
     {
-        Livewire::test(ListMyShares::class)
-            ->callAction('subscribeToShare', [
-                'billing_schedule_id' => $this->schedule->id,
-                'number_of_shares' => 1,
-                'subscribed_at' => today()->toDateString(),
-            ])
-            ->assertHasNoActionErrors();
-
-        $this->assertDatabaseHas('share_subscriptions', [
-            'member_id' => $this->member->id,
-            'billing_schedule_id' => $this->schedule->id,
-            'number_of_shares' => 1,
-            'status' => ShareStatus::PendingPayment->value,
-        ]);
-    }
-
-    public function test_subscribe_action_requires_billing_schedule(): void
-    {
-        Livewire::test(ListMyShares::class)
-            ->callAction('subscribeToShare', [
-                'number_of_shares' => 1,
-                'subscribed_at' => today()->toDateString(),
-            ])
-            ->assertHasActionErrors(['billing_schedule_id' => 'required']);
+        $this->get(route('filament.member.resources.shares.my-shares.index'))
+            ->assertOk()
+            ->assertDontSee('Subscribe to Share');
     }
 
     public function test_member_can_only_see_own_share_subscriptions(): void

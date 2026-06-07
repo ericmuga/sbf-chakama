@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Projects\RelationManagers;
 
+use App\Filament\Resources\Finance\PurchaseHeaders\PurchaseHeaderResource;
 use App\Models\Finance\PurchaseHeader;
 use Filament\Actions\Action;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -54,7 +55,7 @@ class PurchaseOrdersRelationManager extends RelationManager
                 Action::make('create_purchase_order')
                     ->label('New Purchase Invoice')
                     ->icon('heroicon-o-shopping-cart')
-                    ->url(fn (): string => route('filament.sbf.resources.finance.purchase-headers.create', [
+                    ->url(fn (): string => PurchaseHeaderResource::getUrl('create', [
                         'project' => $this->getOwnerRecord()->id,
                     ])),
             ])
@@ -62,7 +63,7 @@ class PurchaseOrdersRelationManager extends RelationManager
                 Action::make('open_document')
                     ->label('Open')
                     ->icon('heroicon-o-arrow-top-right-on-square')
-                    ->url(fn (PurchaseHeader $record): string => route('filament.sbf.resources.finance.purchase-headers.edit', [
+                    ->url(fn (PurchaseHeader $record): string => PurchaseHeaderResource::getUrl('edit', [
                         'record' => $record,
                     ])),
             ]);

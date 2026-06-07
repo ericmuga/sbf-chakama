@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Projects\Pages;
 use App\Enums\DirectCostType;
 use App\Enums\ProjectMemberRole;
 use App\Enums\ProjectStatus;
+use App\Filament\Resources\Finance\PurchaseHeaders\PurchaseHeaderResource;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Filament\Widgets\Projects\BudgetVsActualChart;
 use App\Filament\Widgets\Projects\CostBreakdownChart;
@@ -43,7 +44,7 @@ class ViewProject extends ViewRecord
             Action::make('create_purchase_order')
                 ->label('Purchase Invoice')
                 ->icon('heroicon-o-shopping-cart')
-                ->url(fn (Project $record): string => route('filament.sbf.resources.finance.purchase-headers.create', [
+                ->url(fn (Project $record): string => PurchaseHeaderResource::getUrl('create', [
                     'project' => $record->id,
                 ])),
             Action::make('add_direct_cost')
@@ -93,6 +94,40 @@ class ViewProject extends ViewRecord
                     Notification::make()
                         ->success()
                         ->title('Project direct cost captured.')
+                        ->send();
+                }),
+            Action::make('add_budget_line')
+                ->label('Budget Line')
+                ->icon('heroicon-o-table-cells')
+                ->schema([
+                    Select::make('gl_account_no')
+                        ->label('Expense G/L Account')
+                        ->options(
+                            GlAccount::query()
+                                ->where('account_type', 'Posting')
+                                ->orderBy('no')
+                                ->get()
+                                ->mapWithKeys(fn (GlAccount $account): array => [$account->no => $account->no.' - '.$account->name])
+                        )
+                        ->searchable()
+                        ->required(),
+                    TextInput::make('description')
+                        ->maxLength(255),
+                    TextInput::make('budgeted_amount')
+                        ->label('Budgeted Amount (KES)')
+                        ->numeric()
+                        ->required()
+                        ->minValue(0),
+                    TextInput::make('sort_order')
+                        ->numeric()
+                        ->default(0),
+                ])
+                ->action(function (Project $record, array $data): void {
+                    $record->budgetLines()->create($data);
+
+                    Notification::make()
+                        ->success()
+                        ->title('Budget line added.')
                         ->send();
                 }),
             Action::make('add_milestone')

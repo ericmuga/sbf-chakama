@@ -2,6 +2,8 @@
 
 namespace App\Jobs;
 
+use App\Enums\ShareStatus;
+use App\Models\Finance\NumberSeries;
 use App\Models\Finance\SalesHeader;
 use App\Models\Finance\SalesLine;
 use App\Models\Member;
@@ -35,14 +37,34 @@ class ProcessShareBillingRunJob implements ShouldQueue
             return;
         }
 
-        $run = ShareBillingRun::with('billingSchedule')->findOrFail($this->shareBillingRunId);
+        $run = ShareBillingRun::with(['billingSchedule', 'memberGroup'])->findOrFail($this->shareBillingRunId);
         $schedule = $run->billingSchedule;
 
-        // Get all active Chakama members who have a subscription (allocation) to this schedule
-        $subscriptions = ShareSubscription::with('member.financeCustomer')
+        if (! $schedule->service_id) {
+            $run->update([
+                'status' => 'failed',
+                'processed_at' => now(),
+                'error_log' => "Billing schedule '{$schedule->name}' has no Service configured. Edit the schedule and pick a sellable Service before running.",
+            ]);
+
+            return;
+        }
+
+        // When the run is tied to a Member List, auto-create a 1-share subscription
+        // for any listed member who has no active allocation on this schedule yet.
+        if ($run->memberGroup) {
+            $this->ensureSubscriptionsForGroup($run, $schedule);
+        }
+
+        $subscriptionsQuery = ShareSubscription::with('member.financeCustomer')
             ->where('billing_schedule_id', $schedule->id)
-            ->whereNotIn('status', ['cancelled', 'transferred'])
-            ->get();
+            ->whereNotIn('status', ['cancelled', 'transferred']);
+
+        if ($run->memberGroup) {
+            $subscriptionsQuery->whereIn('member_id', $run->memberGroup->resolveMemberIds());
+        }
+
+        $subscriptions = $subscriptionsQuery->get();
 
         $totalInvoiced = 0.0;
         $memberCount = 0;
@@ -116,6 +138,48 @@ class ProcessShareBillingRunJob implements ShouldQueue
                 ->body("{$memberCount} invoice(s) created — KES ".number_format($totalInvoiced, 2).($errors ? ' (with errors)' : ''))
                 ->success()
                 ->sendToDatabase($run->createdBy);
+        }
+    }
+
+    /**
+     * Ensure every member in the run's Member List has an active subscription
+     * on this schedule. Missing members get a 1-share pending subscription so
+     * they are then invoiced by the main loop.
+     */
+    private function ensureSubscriptionsForGroup(ShareBillingRun $run, ShareBillingSchedule $schedule): void
+    {
+        $memberIds = $run->memberGroup->resolveMemberIds();
+
+        if ($memberIds->isEmpty()) {
+            return;
+        }
+
+        $alreadySubscribed = ShareSubscription::query()
+            ->where('billing_schedule_id', $schedule->id)
+            ->whereIn('member_id', $memberIds)
+            ->whereNotIn('status', ['cancelled', 'transferred'])
+            ->pluck('member_id');
+
+        $missing = $memberIds->diff($alreadySubscribed);
+
+        foreach ($missing as $memberId) {
+            $pricePerShare = (float) $schedule->price_per_share;
+
+            ShareSubscription::create([
+                'no' => NumberSeries::generate('SHARE'),
+                'member_id' => $memberId,
+                'billing_schedule_id' => $schedule->id,
+                'number_of_shares' => 1,
+                'price_per_share' => $pricePerShare,
+                'total_amount' => $pricePerShare,
+                'amount_paid' => 0,
+                'status' => ShareStatus::PendingPayment,
+                'is_first_share' => ! ShareSubscription::where('member_id', $memberId)->exists(),
+                'is_nominee' => false,
+                'subscribed_at' => $run->billing_date,
+                'next_billing_date' => $run->billing_date,
+                'number_series_code' => 'SHARE',
+            ]);
         }
     }
 

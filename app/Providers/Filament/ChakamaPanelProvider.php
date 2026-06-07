@@ -21,12 +21,14 @@ use App\Filament\Resources\Finance\GlAccounts\GlAccountResource;
 use App\Filament\Resources\Finance\GlEntries\GlEntryResource;
 use App\Filament\Resources\Finance\NumberSeries\NumberSeriesResource;
 use App\Filament\Resources\Finance\PaymentMethods\PaymentMethodResource;
+use App\Filament\Resources\Finance\PurchaseHeaders\PurchaseHeaderResource;
 use App\Filament\Resources\Finance\ServicePostingGroups\ServicePostingGroupResource;
 use App\Filament\Resources\Finance\Services\ServiceResource;
 use App\Filament\Resources\Finance\VendorLedgerEntries\VendorLedgerEntryResource;
 use App\Filament\Resources\Finance\VendorPayments\VendorPaymentResource;
 use App\Filament\Resources\Finance\VendorPostingGroups\VendorPostingGroupResource;
 use App\Filament\Resources\Finance\Vendors\VendorResource;
+use App\Filament\Resources\MemberGroups\MemberGroupResource;
 use App\Filament\Resources\Members\MemberResource;
 use App\Filament\Resources\Projects\ProjectResource;
 use App\Filament\Resources\UserResource;
@@ -71,6 +73,7 @@ class ChakamaPanelProvider extends PanelProvider
                 ShareSubscriptionResource::class,
                 ShareBillingScheduleResource::class,
                 ShareBillingRunResource::class,
+                MemberGroupResource::class,
                 ChakamaMemberReportResource::class,
                 FundsBankAccountResource::class,
                 FundAccountResource::class,
@@ -88,6 +91,7 @@ class ChakamaPanelProvider extends PanelProvider
                 GlEntryResource::class,
                 NumberSeriesResource::class,
                 PaymentMethodResource::class,
+                PurchaseHeaderResource::class,
                 ServicePostingGroupResource::class,
                 ServiceResource::class,
                 VendorLedgerEntryResource::class,

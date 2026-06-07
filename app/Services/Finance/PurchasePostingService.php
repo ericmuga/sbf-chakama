@@ -5,6 +5,7 @@ namespace App\Services\Finance;
 use App\Models\Finance\GlEntry;
 use App\Models\Finance\PurchaseHeader;
 use App\Models\Finance\VendorLedgerEntry;
+use App\Services\ProjectService;
 use Illuminate\Support\Facades\DB;
 
 class PurchasePostingService
@@ -82,6 +83,7 @@ class PurchasePostingService
                 'credit_amount' => $isCreditMemo ? 0 : $totalAmount,
                 'source_type' => 'PurchaseHeader',
                 'source_id' => $header->id,
+                'project_id' => $header->project_id,
                 'created_by' => auth()->id(),
             ]);
 
@@ -96,11 +98,16 @@ class PurchasePostingService
                     'credit_amount' => $isCreditMemo ? $line->line_amount : 0,
                     'source_type' => 'PurchaseLine',
                     'source_id' => $line->id,
+                    'project_id' => $header->project_id,
                     'created_by' => auth()->id(),
                 ]);
             }
 
             $header->update(['status' => 'posted']);
         });
+
+        if ($header->project_id && $header->project) {
+            app(ProjectService::class)->recalculateSpent($header->project);
+        }
     }
 }

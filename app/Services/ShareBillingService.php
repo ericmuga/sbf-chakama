@@ -20,7 +20,15 @@ class ShareBillingService
 
     public function generateInvoice(ShareSubscription $subscription): SalesHeader
     {
-        return DB::transaction(function () use ($subscription) {
+        $schedule = $subscription->billingSchedule;
+
+        if (! $schedule?->service_id) {
+            throw new \RuntimeException(
+                "Billing schedule '{$schedule?->name}' has no Service configured. Edit the schedule and pick a sellable Service before billing."
+            );
+        }
+
+        return DB::transaction(function () use ($subscription, $schedule) {
             $member = $subscription->member;
             $customer = $member->financeCustomer;
             $customer?->load('customerPostingGroup');
@@ -41,7 +49,7 @@ class ShareBillingService
                 'quantity' => $subscription->number_of_shares,
                 'unit_price' => $subscription->price_per_share,
                 'line_amount' => $subscription->total_amount,
-                'service_id' => $subscription->billingSchedule?->service_id,
+                'service_id' => $schedule->service_id,
             ]);
 
             $this->salesPostingService->post($header);

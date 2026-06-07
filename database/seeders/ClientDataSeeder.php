@@ -272,83 +272,85 @@ class ClientDataSeeder extends Seeder
             61 => ['TERENCE JUSTIMORE MUDANYA CHAZIMA', 1, 500, 3000, '10727995'],
         ];
 
-        DB::transaction(function () use ($sbfMembers, $chakamaMembersData) {
-            $now = now()->toDateTimeString();
+        $now = now()->toDateTimeString();
 
-            // ─── Resolve posting groups ────────────────────────────────────────────
-            $customerPostingGroupId = DB::table('customer_posting_groups')
-                ->where('code', 'MEMBER')
-                ->value('id');
+        // ─── Resolve posting groups ────────────────────────────────────────────
+        $customerPostingGroupId = DB::table('customer_posting_groups')
+            ->where('code', 'MEMBER')
+            ->value('id');
 
-            $vendorPostingGroupId = DB::table('vendor_posting_groups')
-                ->where('code', 'MEMBER')
-                ->orWhere('code', 'VENDOR')
-                ->orderByRaw("CASE WHEN code = 'MEMBER' THEN 0 ELSE 1 END")
-                ->value('id');
+        $vendorPostingGroupId = DB::table('vendor_posting_groups')
+            ->where('code', 'MEMBER')
+            ->orWhere('code', 'VENDOR')
+            ->orderByRaw("CASE WHEN code = 'MEMBER' THEN 0 ELSE 1 END")
+            ->value('id');
 
-            $fundAccountId = DB::table('fund_accounts')->value('id');
+        $fundAccountId = DB::table('fund_accounts')->value('id');
 
-            // ─── Reset number_series ───────────────────────────────────────────────
-            DB::table('number_series')
-                ->whereIn('code', ['MBR', 'CUST', 'VEND'])
-                ->update(['last_no' => 0]);
+        // ─── Reset number_series ───────────────────────────────────────────────
+        DB::table('number_series')
+            ->whereIn('code', ['MBR', 'CUST', 'VEND'])
+            ->update(['last_no' => 0]);
 
-            // ─── Disable FK checks & truncate business tables ──────────────────────
-            DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        // ─── Disable FK checks & truncate business tables ──────────────────────
+        // TRUNCATE implicitly commits in MySQL, so this must run outside a transaction
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
 
-            $tablesToTruncate = [
-                'bus_members',
-                'customers',
-                'vendors',
-                'customer_ledger_entries',
-                'detailed_customer_ledger_entries',
-                'gl_entries',
-                'bank_ledger_entries',
-                'sales_headers',
-                'sales_lines',
-                'purchase_headers',
-                'purchase_lines',
-                'claims',
-                'claim_approvals',
-                'claim_lines',
-                'claim_attachments',
-                'claim_line_attachments',
-                'share_subscriptions',
-                'share_billing_runs',
-                'fund_withdrawals',
-                'fund_withdrawal_approvals',
-                'fund_withdrawal_attachments',
-                'fund_transactions',
-                'cash_receipts',
-                'direct_expenses',
-                'direct_expense_lines',
-                'direct_incomes',
-                'direct_income_lines',
-                'vendor_ledger_entries',
-                'vendor_applications',
-                'customer_applications',
-                'vendor_payments',
-                'project_members',
-                'project_milestones',
-                'project_attachments',
-                'project_budget_lines',
-                'project_comments',
-                'project_direct_costs',
-                'project_status_history',
-                'projects',
-                'notifications',
-                'mpesa_transactions',
-                'bus_documents',
-            ];
+        $tablesToTruncate = [
+            'bus_members',
+            'customers',
+            'vendors',
+            'customer_ledger_entries',
+            'detailed_customer_ledger_entries',
+            'gl_entries',
+            'bank_ledger_entries',
+            'sales_headers',
+            'sales_lines',
+            'purchase_headers',
+            'purchase_lines',
+            'claims',
+            'claim_approvals',
+            'claim_lines',
+            'claim_attachments',
+            'claim_line_attachments',
+            'share_subscriptions',
+            'share_billing_runs',
+            'fund_withdrawals',
+            'fund_withdrawal_approvals',
+            'fund_withdrawal_attachments',
+            'fund_transactions',
+            'cash_receipts',
+            'direct_expenses',
+            'direct_expense_lines',
+            'direct_incomes',
+            'direct_income_lines',
+            'vendor_ledger_entries',
+            'vendor_applications',
+            'customer_applications',
+            'vendor_payments',
+            'project_members',
+            'project_milestones',
+            'project_attachments',
+            'project_budget_lines',
+            'project_comments',
+            'project_direct_costs',
+            'project_status_history',
+            'projects',
+            'notifications',
+            'mpesa_transactions',
+            'bus_documents',
+        ];
 
-            foreach ($tablesToTruncate as $table) {
-                DB::table($table)->truncate();
-            }
+        foreach ($tablesToTruncate as $table) {
+            DB::table($table)->truncate();
+        }
 
-            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
-            $this->command->info('Tables truncated.');
+        $this->command->info('Tables truncated.');
 
+        // ─── Insert data inside a transaction ─────────────────────────────────
+        DB::transaction(function () use ($sbfMembers, $chakamaMembersData, $now, $customerPostingGroupId, $vendorPostingGroupId, $fundAccountId) {
             // ─── Counters ──────────────────────────────────────────────────────────
             $mbrCounter = 0;
             $custCounter = 0;
@@ -368,15 +370,15 @@ class ClientDataSeeder extends Seeder
                 $custCounter++;
                 $vendCounter++;
 
-                $memberNo = 'MBR-' . str_pad($mbrCounter, 6, '0', STR_PAD_LEFT);
-                $custNo = 'CUST-' . str_pad($custCounter, 6, '0', STR_PAD_LEFT);
-                $vendNo = 'VEND-' . str_pad($vendCounter, 6, '0', STR_PAD_LEFT);
+                $memberNo = 'MBR-'.str_pad($mbrCounter, 6, '0', STR_PAD_LEFT);
+                $custNo = 'CUST-'.str_pad($custCounter, 6, '0', STR_PAD_LEFT);
+                $vendNo = 'VEND-'.str_pad($vendCounter, 6, '0', STR_PAD_LEFT);
 
                 $memberId = DB::table('bus_members')->insertGetId([
                     'type' => 'member',
                     'no' => $memberNo,
                     'name' => $name,
-                    'member_status' => $regNo <= 198 ? 'active' : 'waiting',
+                    'member_status' => 'active',
                     'is_sbf' => true,
                     'is_chakama' => false,
                     'customer_no' => $custNo,
@@ -420,7 +422,7 @@ class ClientDataSeeder extends Seeder
                         'entry_no' => $entryNo,
                         'customer_id' => $customerId,
                         'document_type' => 'invoice',
-                        'document_no' => 'HIST-SBF-' . str_pad($regNo, 3, '0', STR_PAD_LEFT),
+                        'document_no' => 'HIST-SBF-'.str_pad($regNo, 3, '0', STR_PAD_LEFT),
                         'posting_date' => '2025-06-01',
                         'due_date' => '2026-03-31',
                         'amount' => $totalBilled,
@@ -478,7 +480,7 @@ class ClientDataSeeder extends Seeder
                         ->update([
                             'is_chakama' => true,
                             'identity_no' => $nationalId,
-                            'identity_type' => $nationalId ? 'national_id' : null,
+                            'identity_type' => 'national_id',
                         ]);
 
                     $memberId = $existingSbf['member_id'];
@@ -489,16 +491,16 @@ class ClientDataSeeder extends Seeder
                     $custCounter++;
                     $vendCounter++;
 
-                    $memberNo = 'MBR-' . str_pad($mbrCounter, 6, '0', STR_PAD_LEFT);
-                    $custNo = 'CUST-' . str_pad($custCounter, 6, '0', STR_PAD_LEFT);
-                    $vendNo = 'VEND-' . str_pad($vendCounter, 6, '0', STR_PAD_LEFT);
+                    $memberNo = 'MBR-'.str_pad($mbrCounter, 6, '0', STR_PAD_LEFT);
+                    $custNo = 'CUST-'.str_pad($custCounter, 6, '0', STR_PAD_LEFT);
+                    $vendNo = 'VEND-'.str_pad($vendCounter, 6, '0', STR_PAD_LEFT);
 
                     $memberId = DB::table('bus_members')->insertGetId([
                         'type' => 'member',
                         'no' => $memberNo,
                         'name' => $chkName,
                         'identity_no' => $nationalId,
-                        'identity_type' => $nationalId ? 'national_id' : null,
+                        'identity_type' => 'national_id',
                         'member_status' => 'active',
                         'is_sbf' => false,
                         'is_chakama' => true,
@@ -532,7 +534,7 @@ class ClientDataSeeder extends Seeder
                 $subscriptionStatus = $balanceFeb26 > 0 ? 'pending_payment' : 'active';
 
                 DB::table('share_subscriptions')->insert([
-                    'no' => 'CHK-SUB-' . str_pad($regNo, 3, '0', STR_PAD_LEFT),
+                    'no' => 'CHK-SUB-'.str_pad($regNo, 3, '0', STR_PAD_LEFT),
                     'member_id' => $memberId,
                     'billing_schedule_id' => $scheduleId,
                     'number_of_shares' => $shares,
@@ -561,7 +563,7 @@ class ClientDataSeeder extends Seeder
                     'entry_no' => $entryNo,
                     'customer_id' => $customerId,
                     'document_type' => 'invoice',
-                    'document_no' => 'HIST-CHK-' . str_pad($regNo, 3, '0', STR_PAD_LEFT),
+                    'document_no' => 'HIST-CHK-'.str_pad($regNo, 3, '0', STR_PAD_LEFT),
                     'posting_date' => '2024-09-01',
                     'due_date' => '2026-02-28',
                     'amount' => $totalAmount,
@@ -580,7 +582,7 @@ class ClientDataSeeder extends Seeder
                         'entry_no' => $entryNo,
                         'customer_id' => $customerId,
                         'document_type' => 'payment',
-                        'document_no' => 'HIST-CHK-CR-' . str_pad($regNo, 3, '0', STR_PAD_LEFT),
+                        'document_no' => 'HIST-CHK-CR-'.str_pad($regNo, 3, '0', STR_PAD_LEFT),
                         'posting_date' => '2024-09-01',
                         'due_date' => '2026-02-28',
                         'amount' => $balanceFeb26,

@@ -45,7 +45,16 @@ class CustomerPostingGroupResource extends Resource
 
     public static function canDelete(Model $record): bool
     {
-        return auth()->user()?->isAdmin() ?? false;
+        if (! (auth()->user()?->isAdmin() ?? false)) {
+            return false;
+        }
+
+        // Prevent deletion if any customer using this posting group has ledger entries
+        $hasEntries = $record->customers()
+            ->whereHas('customerLedgerEntries')
+            ->exists();
+
+        return ! $hasEntries;
     }
 
     public static function form(Schema $schema): Schema

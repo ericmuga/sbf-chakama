@@ -45,7 +45,16 @@ class VendorPostingGroupResource extends Resource
 
     public static function canDelete(Model $record): bool
     {
-        return auth()->user()?->isAdmin() ?? false;
+        if (! (auth()->user()?->isAdmin() ?? false)) {
+            return false;
+        }
+
+        // Prevent deletion if any vendor using this posting group has ledger entries
+        $hasEntries = $record->vendors()
+            ->whereHas('vendorLedgerEntries')
+            ->exists();
+
+        return ! $hasEntries;
     }
 
     public static function form(Schema $schema): Schema

@@ -21,3 +21,11 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Sensitive member data exports / spreadsheets
+*.xlsx
+~$*.xlsx
+
+# Claude Code local artifacts
+/.claude/worktrees
+/.claude/settings.local.json
