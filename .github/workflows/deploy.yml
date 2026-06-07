@@ -1,0 +1,74 @@
+name: deploy
+
+# Runs only after the "tests" workflow completes successfully on main,
+# so production is never updated from a red build.
+on:
+  workflow_run:
+    workflows: ["tests"]
+    types:
+      - completed
+    branches:
+      - main
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    environment:
+      name: production
+      url: https://soba.primehubonline.com
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_SSH_PORT }}
+          command_timeout: 20m
+          script: |
+            set -euo pipefail
+
+            APP_DIR="${{ secrets.PROD_APP_DIR }}"
+            cd "$APP_DIR"
+
+            echo "==> Enabling maintenance mode"
+            php artisan down --render="errors::503" --retry=15 || true
+
+            cleanup() {
+              echo "==> Disabling maintenance mode"
+              php artisan up || true
+            }
+            trap cleanup EXIT
+
+            echo "==> Pulling latest code"
+            git fetch --all --prune
+            git reset --hard origin/main
+
+            echo "==> Installing PHP dependencies"
+            composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+            echo "==> Building front-end assets"
+            npm ci
+            npm run build
+
+            echo "==> Running database migrations"
+            php artisan migrate --force
+
+            echo "==> Refreshing caches"
+            php artisan optimize:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan event:cache
+
+            echo "==> Restarting queue workers"
+            php artisan queue:restart
+
+            echo "==> Deploy complete"

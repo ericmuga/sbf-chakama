@@ -46,7 +46,11 @@ class GlAccountResource extends Resource
 
     public static function canDelete(Model $record): bool
     {
-        return auth()->user()?->isAdmin() ?? false;
+        if (! (auth()->user()?->isAdmin() ?? false)) {
+            return false;
+        }
+
+        return ! $record->glEntries()->exists();
     }
 
     public static function form(Schema $schema): Schema

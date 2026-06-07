@@ -49,6 +49,29 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
+        /*
+         * Gmail SMTP via Google App Password
+         * -----------------------------------
+         * 1. Enable 2-Factor Authentication on your Google account.
+         * 2. Go to https://myaccount.google.com/apppasswords
+         * 3. Generate an App Password for "Mail" / "Other device".
+         * 4. Set in .env:
+         *      MAIL_MAILER=gmail
+         *      GMAIL_USERNAME=your@gmail.com
+         *      GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx   (16-char app password, spaces OK)
+         *      MAIL_FROM_ADDRESS=your@gmail.com
+         *      MAIL_FROM_NAME="SBF Chakama"
+         */
+        'gmail' => [
+            'transport' => 'smtp',
+            'host' => 'smtp.gmail.com',
+            'port' => 587,
+            'scheme' => 'tls',
+            'username' => env('GMAIL_USERNAME'),
+            'password' => env('GMAIL_APP_PASSWORD'),
+            'timeout' => null,
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],

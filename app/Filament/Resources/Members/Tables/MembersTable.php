@@ -9,7 +9,6 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
@@ -27,7 +26,7 @@ class MembersTable
                     ->label('Member No')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('user.name')
+                TextColumn::make('name')
                     ->label('Name')
                     ->searchable()
                     ->sortable(),
@@ -124,38 +123,11 @@ class MembersTable
                     ->icon(Heroicon::OutlinedDocumentChartBar)
                     ->color('info')
                     ->slideOver()
-                    ->modalWidth('xl')
+                    ->modalWidth('2xl')
                     ->modalHeading(fn (Member $record): string => 'Statement — '.$record->name)
-                    ->modalDescription('Select a date range to filter the statement. Leave blank for all entries.')
-                    ->schema([
-                        DatePicker::make('date_from')
-                            ->label('From')
-                            ->native(false),
-                        DatePicker::make('date_to')
-                            ->label('To')
-                            ->native(false),
-                    ])
-                    ->modalSubmitActionLabel('Download Excel')
-                    ->extraModalFooterActions(fn (Action $action): array => [
-                        $action->makeModalSubmitAction('downloadPdf', arguments: ['format' => 'pdf'])
-                            ->label('Download PDF')
-                            ->color('danger')
-                            ->icon(Heroicon::DocumentArrowDown),
-                    ])
-                    ->action(function (array $data, array $arguments, Member $record): mixed {
-                        $format = $arguments['format'] ?? 'excel';
-                        $params = array_filter([
-                            'date_from' => $data['date_from'] ?? null,
-                            'date_to' => $data['date_to'] ?? null,
-                        ]);
-                        $query = $params ? '?'.http_build_query($params) : '';
-
-                        $routeName = $format === 'pdf'
-                            ? 'admin.reports.member-statement.pdf'
-                            : 'admin.reports.member-statement.excel';
-
-                        return redirect()->away(route($routeName, $record).$query);
-                    }),
+                    ->modalContent(fn (Member $record) => view('livewire.members.member-statement-modal', ['memberId' => $record->id]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Close'),
                 EditAction::make(),
             ])
             ->toolbarActions([

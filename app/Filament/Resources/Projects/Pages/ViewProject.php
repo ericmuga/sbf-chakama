@@ -96,6 +96,40 @@ class ViewProject extends ViewRecord
                         ->title('Project direct cost captured.')
                         ->send();
                 }),
+            Action::make('add_budget_line')
+                ->label('Budget Line')
+                ->icon('heroicon-o-table-cells')
+                ->schema([
+                    Select::make('gl_account_no')
+                        ->label('Expense G/L Account')
+                        ->options(
+                            GlAccount::query()
+                                ->where('account_type', 'Posting')
+                                ->orderBy('no')
+                                ->get()
+                                ->mapWithKeys(fn (GlAccount $account): array => [$account->no => $account->no.' - '.$account->name])
+                        )
+                        ->searchable()
+                        ->required(),
+                    TextInput::make('description')
+                        ->maxLength(255),
+                    TextInput::make('budgeted_amount')
+                        ->label('Budgeted Amount (KES)')
+                        ->numeric()
+                        ->required()
+                        ->minValue(0),
+                    TextInput::make('sort_order')
+                        ->numeric()
+                        ->default(0),
+                ])
+                ->action(function (Project $record, array $data): void {
+                    $record->budgetLines()->create($data);
+
+                    Notification::make()
+                        ->success()
+                        ->title('Budget line added.')
+                        ->send();
+                }),
             Action::make('add_milestone')
                 ->label('Milestone')
                 ->icon('heroicon-o-flag')

@@ -31,16 +31,13 @@ class MyDependantsResource extends Resource
 
     public static function shouldRegisterNavigation(array $parameters = []): bool
     {
-        $member = auth()->user()?->member;
-
-        return ($member?->is_chakama || $member?->is_sbf) ?? false;
+        // Dependants are an SBF feature — not shown for Chakama-only members
+        return (bool) auth()->user()?->member?->is_sbf;
     }
 
     public static function canViewAny(): bool
     {
-        $member = auth()->user()?->member;
-
-        return ($member?->is_chakama || $member?->is_sbf) ?? false;
+        return (bool) auth()->user()?->member?->is_sbf;
     }
 
     public static function getEloquentQuery(): Builder

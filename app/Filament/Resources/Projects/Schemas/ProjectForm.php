@@ -28,7 +28,10 @@ class ProjectForm
                             ->rows(3)
                             ->columnSpanFull(),
                         Select::make('module')
-                            ->options(ProjectModule::class)
+                            ->options(collect(ProjectModule::cases())
+                                ->reject(fn (ProjectModule $m) => $m === ProjectModule::Sbf)
+                                ->mapWithKeys(fn (ProjectModule $m) => [$m->value => $m->label()]))
+                            ->default(ProjectModule::Chakama->value)
                             ->required(),
                         Select::make('priority')
                             ->options(ProjectPriority::class)

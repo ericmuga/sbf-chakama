@@ -4,12 +4,15 @@ namespace App\Filament\Resources\Chakama;
 
 use App\Enums\ShareStatus;
 use App\Filament\Resources\Chakama\Pages\CreateShareSubscription;
+use App\Filament\Resources\Chakama\Pages\EditShareSubscription;
 use App\Filament\Resources\Chakama\Pages\ListShareSubscriptions;
 use App\Filament\Resources\Chakama\Pages\ViewShareSubscription;
 use App\Models\Member;
+use App\Models\MemberGroup;
 use App\Models\ShareBillingSchedule;
 use App\Models\ShareSubscription;
 use BackedEnum;
+use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
@@ -33,9 +36,11 @@ class ShareSubscriptionResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMap;
 
+    protected static ?string $navigationLabel = 'Member Allocations';
+
     protected static \UnitEnum|string|null $navigationGroup = 'Chakama — Shares';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
 
     public static function canViewAny(): bool
     {
@@ -53,6 +58,14 @@ class ShareSubscriptionResource extends Resource
                             ->label('Target all active Chakama members')
                             ->live()
                             ->default(false),
+                        Select::make('member_group_id')
+                            ->label('Or use a saved Member List')
+                            ->options(MemberGroup::where('is_active', true)->pluck('name', 'id'))
+                            ->searchable()
+                            ->nullable()
+                            ->live()
+                            ->visible(fn (Get $get): bool => ! $get('all_members'))
+                            ->helperText('Apply this allocation to every effective member in the chosen list.'),
                         CheckboxList::make('member_ids')
                             ->label('Members')
                             ->options(
@@ -62,8 +75,8 @@ class ShareSubscriptionResource extends Resource
                                     ->pluck('name', 'id')
                             )
                             ->searchable()
-                            ->visible(fn (Get $get): bool => ! $get('all_members'))
-                            ->required(fn (Get $get): bool => ! $get('all_members')),
+                            ->visible(fn (Get $get): bool => ! $get('all_members') && ! $get('member_group_id'))
+                            ->required(fn (Get $get): bool => ! $get('all_members') && ! $get('member_group_id')),
                     ]),
                 Section::make('Subscription Details')
                     ->columns(2)
@@ -154,6 +167,9 @@ class ShareSubscriptionResource extends Resource
             ])
             ->recordActions([
                 ViewAction::make(),
+                EditAction::make()
+                    ->label('Edit Allocation')
+                    ->tooltip('Edit share allocation for this member'),
             ])
             ->defaultSort('id', 'desc');
     }
@@ -169,6 +185,7 @@ class ShareSubscriptionResource extends Resource
             'index' => ListShareSubscriptions::route('/'),
             'create' => CreateShareSubscription::route('/create'),
             'view' => ViewShareSubscription::route('/{record}'),
+            'edit' => EditShareSubscription::route('/{record}/edit'),
         ];
     }
 }

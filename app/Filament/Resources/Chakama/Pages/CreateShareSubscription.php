@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Chakama\Pages;
 
 use App\Filament\Resources\Chakama\ShareSubscriptionResource;
 use App\Models\Member;
+use App\Models\MemberGroup;
 use App\Models\ShareSubscription;
 use App\Services\ShareBillingService;
 use App\Services\ShareService;
@@ -21,9 +22,14 @@ class CreateShareSubscription extends CreateRecord
         $shareService = app(ShareService::class);
         $billingService = app(ShareBillingService::class);
 
-        $memberIds = $data['all_members']
-            ? Member::where('is_chakama', true)->where('member_status', 'active')->pluck('id')->all()
-            : ($data['member_ids'] ?? []);
+        $memberIds = match (true) {
+            (bool) ($data['all_members'] ?? false) => Member::where('is_chakama', true)
+                ->where('member_status', 'active')
+                ->pluck('id')
+                ->all(),
+            ! empty($data['member_group_id']) => MemberGroup::find($data['member_group_id'])?->resolveMemberIds()->all() ?? [],
+            default => $data['member_ids'] ?? [],
+        };
 
         $subscribeOn = Carbon::parse($data['subscribed_at']);
         $isImmediate = $subscribeOn->lte(today());

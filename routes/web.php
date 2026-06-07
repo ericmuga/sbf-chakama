@@ -21,6 +21,8 @@ Route::middleware(['auth'])->prefix('admin/reports')->name('admin.reports.')->gr
     Route::get('members/{member}/statement/pdf', [MemberStatementController::class, 'downloadPdf'])->name('member-statement.pdf');
     Route::get('receipts/{receipt}/pdf', [MemberStatementController::class, 'downloadReceiptPdf'])->name('receipt.pdf');
     Route::get('receipts/export-excel', [MemberStatementController::class, 'downloadReceiptsExcel'])->name('receipts.excel');
+    Route::get('invoices/{invoice:no}/pdf', [MemberStatementController::class, 'downloadInvoicePdf'])->name('invoice.pdf');
+    Route::get('chakama-member-report/pdf', [MemberStatementController::class, 'downloadChakamaMemberReportPdf'])->name('chakama-member-report.pdf');
 });
 
 Route::middleware(['auth'])->prefix('admin/templates')->name('admin.templates.')->group(function () {

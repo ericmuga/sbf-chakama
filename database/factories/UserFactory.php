@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\EntityDimension;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -54,6 +55,17 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'is_admin' => true,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is a Chakama administrator.
+     */
+    public function chakamaAdmin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_admin' => true,
+            'entity' => EntityDimension::Chakama,
         ]);
     }
 

@@ -10,6 +10,7 @@ use App\Models\Finance\PurchaseSetup;
 use App\Models\Finance\SalesSetup;
 use App\Models\Finance\Vendor as FinanceVendor;
 use App\Models\Finance\VendorPostingGroup;
+use App\Notifications\WelcomeNewUserNotification;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 #[Fillable(['no', 'user_id', 'identity_no', 'identity_type', 'phone', 'member_status', 'is_chakama', 'is_sbf', 'customer_no', 'vendor_no', 'name', 'type', 'member_id', 'email', 'date_of_birth', 'relationship', 'contact_preference', 'bank_name', 'bank_account_name', 'bank_account_no', 'bank_branch', 'mpesa_phone', 'preferred_payment_method', 'exclude_from_billing'])]
 class Member extends Model
@@ -57,12 +59,21 @@ class Member extends Model
                 if ($existingUser) {
                     $member->updateQuietly(['user_id' => $existingUser->id]);
                 } else {
+                    $temporaryPassword = Str::random(10);
                     $user = User::create([
                         'name' => $member->name ?? $member->no,
                         'email' => $member->email,
-                        'password' => Hash::make('password'),
+                        'password' => Hash::make($temporaryPassword),
                     ]);
                     $member->updateQuietly(['user_id' => $user->id]);
+
+                    // Send welcome email with temporary password
+                    try {
+                        $portalUrl = url('/portal');
+                        $user->notify(new WelcomeNewUserNotification($temporaryPassword, $portalUrl));
+                    } catch (\Throwable) {
+                        // Do not fail member creation if email sending fails
+                    }
                 }
             }
 

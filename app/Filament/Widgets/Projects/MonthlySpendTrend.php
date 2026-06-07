@@ -26,15 +26,19 @@ class MonthlySpendTrend extends ChartWidget
         $project = $this->record;
 
         $months = collect(range(11, 0))->map(fn (int $i) => Carbon::now()->subMonths($i)->startOfMonth());
-
         $labels = $months->map(fn (Carbon $m) => $m->format('M Y'))->toArray();
+        $startDate = $months->first()->toDateString();
+        $endDate = $months->last()->copy()->endOfMonth()->toDateString();
 
-        $monthlySpend = $months->map(fn (Carbon $m) => (float) DB::table('gl_entries')
+        // Single query grouping by year-month instead of 12 separate queries
+        $spendByMonth = DB::table('gl_entries')
             ->where('project_id', $project->id)
-            ->whereBetween('posting_date', [$m->copy()->startOfMonth()->toDateString(), $m->copy()->endOfMonth()->toDateString()])
-            ->selectRaw('COALESCE(SUM(debit_amount) - SUM(credit_amount), 0) as net')
-            ->value('net')
-        );
+            ->whereBetween('posting_date', [$startDate, $endDate])
+            ->groupByRaw('DATE_FORMAT(posting_date, "%Y-%m")')
+            ->selectRaw('DATE_FORMAT(posting_date, "%Y-%m") as month_key, COALESCE(SUM(debit_amount) - SUM(credit_amount), 0) as net')
+            ->pluck('net', 'month_key');
+
+        $monthlySpend = $months->map(fn (Carbon $m) => (float) ($spendByMonth[$m->format('Y-m')] ?? 0));
 
         $budgetCeiling = (float) $project->budget;
 
