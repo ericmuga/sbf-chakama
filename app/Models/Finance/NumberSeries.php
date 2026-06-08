@@ -37,6 +37,23 @@ class NumberSeries extends Model
     }
 
     /**
+     * Preview the next number in this series without incrementing it.
+     *
+     * Used to display the number that will be assigned on the create form
+     * before the record is actually saved.
+     */
+    public static function preview(string $code): string
+    {
+        $series = static::where('code', $code)->first();
+
+        if (! $series || ! $series->is_active) {
+            return '';
+        }
+
+        return ($series->prefix ?? '').str_pad((string) ($series->last_no + 1), $series->length, '0', STR_PAD_LEFT);
+    }
+
+    /**
      * Generate the next number in this series (thread-safe via lock).
      */
     public static function generate(string $code): string
