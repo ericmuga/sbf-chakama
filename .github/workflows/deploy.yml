@@ -23,34 +23,35 @@ jobs:
     environment:
       name: production
       url: https://soba.primehubonline.com
-
-    defaults:
-      run:
-        working-directory: ${{ secrets.PROD_APP_DIR }}
+    env:
+      APP_DIR: ${{ secrets.PROD_APP_DIR }}
 
     steps:
       - name: Enable maintenance mode
-        run: php artisan down --render="errors::503" --retry=15 || true
+        run: cd "$APP_DIR" && php artisan down --render="errors::503" --retry=15 || true
 
       - name: Pull latest code
         run: |
+          cd "$APP_DIR"
           git fetch origin --prune
           git checkout -f main
           git reset --hard origin/main
 
       - name: Install PHP dependencies
-        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+        run: cd "$APP_DIR" && composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
       - name: Build front-end assets
         run: |
+          cd "$APP_DIR"
           npm ci
           npm run build
 
       - name: Run database migrations
-        run: php artisan migrate --force
+        run: cd "$APP_DIR" && php artisan migrate --force
 
       - name: Rebuild caches
         run: |
+          cd "$APP_DIR"
           php artisan optimize:clear
           php artisan config:cache
           php artisan route:cache
@@ -58,8 +59,8 @@ jobs:
           php artisan event:cache
 
       - name: Restart queue workers
-        run: php artisan queue:restart
+        run: cd "$APP_DIR" && php artisan queue:restart
 
       - name: Disable maintenance mode
         if: always()
-        run: php artisan up || true
+        run: cd "$APP_DIR" && php artisan up || true
