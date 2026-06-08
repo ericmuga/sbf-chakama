@@ -35,6 +35,7 @@ jobs:
       - name: Pull latest code
         run: |
           git fetch origin --prune
+          git checkout -f main
           git reset --hard origin/main
 
       - name: Install PHP dependencies
