@@ -7,6 +7,7 @@ use App\Filament\Resources\Finance\Vendors\Pages\EditVendor;
 use App\Filament\Resources\Finance\Vendors\Pages\ListVendors;
 use App\Filament\Resources\Finance\Vendors\Schemas\VendorForm;
 use App\Filament\Resources\Finance\Vendors\Tables\VendorsTable;
+use App\Models\Finance\PurchaseSetup;
 use App\Models\Finance\Vendor;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -25,6 +26,11 @@ class VendorResource extends Resource
     protected static UnitEnum|string|null $navigationGroup = 'Finance — Setup';
 
     protected static ?int $navigationSort = 130;
+
+    public static function numberSeriesCode(): ?string
+    {
+        return PurchaseSetup::query()->value('vendor_nos');
+    }
 
     public static function canViewAny(): bool
     {

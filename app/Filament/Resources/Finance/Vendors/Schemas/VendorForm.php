@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Finance\Vendors\Schemas;
 
+use App\Filament\Resources\Finance\Vendors\VendorResource;
+use App\Models\Finance\NumberSeries;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
@@ -14,8 +16,11 @@ class VendorForm
             ->components([
                 TextInput::make('no')
                     ->label('Vendor No')
-                    ->maxLength(50)
-                    ->unique(ignoreRecord: true),
+                    ->default(fn (): string => NumberSeries::preview(VendorResource::numberSeriesCode() ?? ''))
+                    ->placeholder('Assigned automatically on save')
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->helperText('Generated from the vendor number series when the record is saved.'),
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255),

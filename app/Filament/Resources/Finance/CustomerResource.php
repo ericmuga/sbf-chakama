@@ -6,6 +6,8 @@ use App\Filament\Resources\Finance\CustomerResource\Pages\CreateCustomer;
 use App\Filament\Resources\Finance\CustomerResource\Pages\EditCustomer;
 use App\Filament\Resources\Finance\CustomerResource\Pages\ListCustomers;
 use App\Models\Finance\Customer;
+use App\Models\Finance\NumberSeries;
+use App\Models\Finance\SalesSetup;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -37,8 +39,11 @@ class CustomerResource extends Resource
             ->components([
                 TextInput::make('no')
                     ->label('Customer No')
-                    ->maxLength(50)
-                    ->unique(ignoreRecord: true),
+                    ->default(fn (): string => NumberSeries::preview(static::numberSeriesCode() ?? ''))
+                    ->placeholder('Assigned automatically on save')
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->helperText('Generated from the customer number series when the record is saved.'),
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255),
@@ -92,6 +97,11 @@ class CustomerResource extends Resource
             'create' => CreateCustomer::route('/create'),
             'edit' => EditCustomer::route('/{record}/edit'),
         ];
+    }
+
+    public static function numberSeriesCode(): ?string
+    {
+        return SalesSetup::query()->value('customer_nos');
     }
 
     public static function canViewAny(): bool
