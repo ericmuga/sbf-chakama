@@ -127,7 +127,7 @@ class ProjectFilamentTest extends TestCase
         Livewire::test(CreateProject::class)
             ->fillForm([
                 'name' => 'Bursary Fund 2026',
-                'module' => ProjectModule::Sbf->value,
+                'module' => ProjectModule::Chakama->value,
                 'priority' => ProjectPriority::High->value,
                 'budget' => 500000,
             ])
