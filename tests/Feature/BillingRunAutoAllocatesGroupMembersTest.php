@@ -6,6 +6,7 @@ use App\Enums\MemberGroupMode;
 use App\Enums\ShareStatus;
 use App\Jobs\ProcessShareBillingRunJob;
 use App\Models\Finance\NumberSeries;
+use App\Models\Finance\Service;
 use App\Models\FundAccount;
 use App\Models\Member;
 use App\Models\MemberGroup;
@@ -31,6 +32,8 @@ class BillingRunAutoAllocatesGroupMembersTest extends TestCase
             'is_active' => true,
         ]);
 
+        $service = Service::factory()->create();
+
         $schedule = ShareBillingSchedule::create([
             'name' => 'Standard Land Share',
             'price_per_share' => 100000,
@@ -39,6 +42,7 @@ class BillingRunAutoAllocatesGroupMembersTest extends TestCase
             'is_default' => true,
             'is_active' => true,
             'fund_account_id' => $fund->id,
+            'service_id' => $service->id,
         ]);
 
         $listed = Member::factory()->create(['is_chakama' => true, 'member_status' => 'active']);
@@ -97,6 +101,8 @@ class BillingRunAutoAllocatesGroupMembersTest extends TestCase
             'is_active' => true,
         ]);
 
+        $service = Service::factory()->create();
+
         $schedule = ShareBillingSchedule::create([
             'name' => 'Standard Land Share',
             'price_per_share' => 100000,
@@ -105,6 +111,7 @@ class BillingRunAutoAllocatesGroupMembersTest extends TestCase
             'is_default' => true,
             'is_active' => true,
             'fund_account_id' => $fund->id,
+            'service_id' => $service->id,
         ]);
 
         Member::factory()->create(['is_chakama' => true, 'member_status' => 'active']);
@@ -137,6 +144,8 @@ class BillingRunAutoAllocatesGroupMembersTest extends TestCase
             'is_active' => true,
         ]);
 
+        $service = Service::factory()->create();
+
         $schedule = ShareBillingSchedule::create([
             'name' => 'Standard Land Share',
             'price_per_share' => 100000,
@@ -145,6 +154,7 @@ class BillingRunAutoAllocatesGroupMembersTest extends TestCase
             'is_default' => true,
             'is_active' => true,
             'fund_account_id' => $fund->id,
+            'service_id' => $service->id,
         ]);
 
         $listed = Member::factory()->create(['is_chakama' => true, 'member_status' => 'active']);
