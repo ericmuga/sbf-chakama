@@ -6,9 +6,11 @@ use App\Filament\Resources\Finance\CustomerResource\Pages\CreateCustomer;
 use App\Filament\Resources\Finance\CustomerResource\Pages\EditCustomer;
 use App\Filament\Resources\Finance\CustomerResource\Pages\ListCustomers;
 use App\Models\Finance\Customer;
+use App\Models\Finance\CustomerLedgerEntry;
 use App\Models\Finance\NumberSeries;
 use App\Models\Finance\SalesSetup;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -19,7 +21,10 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
@@ -64,6 +69,7 @@ class CustomerResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->withSum('customerLedgerEntries as balance_sum', 'amount'))
             ->columns([
                 TextColumn::make('no')
                     ->label('Customer No')
@@ -77,8 +83,42 @@ class CustomerResource extends Resource
                     ->badge(),
                 TextColumn::make('payment_terms_code')
                     ->label('Payment Terms'),
+                TextColumn::make('balance_sum')
+                    ->label('Balance (KES)')
+                    ->badge()
+                    ->color(fn ($state): string => (float) $state > 0 ? 'danger' : ((float) $state < 0 ? 'success' : 'gray'))
+                    ->formatStateUsing(fn ($state): string => number_format(abs((float) $state), 2).((float) $state > 0 ? ' DR' : ((float) $state < 0 ? ' CR' : '')))
+                    ->sortable(),
+            ])
+            ->filters([
+                SelectFilter::make('customer_posting_group_id')
+                    ->label('Posting Group')
+                    ->relationship('customerPostingGroup', 'description')
+                    ->searchable()
+                    ->preload(),
+                TernaryFilter::make('with_balance')
+                    ->label('Outstanding balance')
+                    ->placeholder('All')
+                    ->trueLabel('With balance')
+                    ->falseLabel('Zero balance')
+                    ->queries(
+                        true: fn (Builder $q): Builder => $q->whereIn('id', static::customerIdsWithBalance()),
+                        false: fn (Builder $q): Builder => $q->whereNotIn('id', static::customerIdsWithBalance()),
+                        blank: fn (Builder $q): Builder => $q,
+                    ),
             ])
             ->defaultSort('no')
+            ->headerActions([
+                Action::make('exportCustomersExcel')
+                    ->label('Export to Excel')
+                    ->icon(Heroicon::ArrowDownTray)
+                    ->color('success')
+                    ->url(fn ($livewire): string => route('admin.reports.customers.export-excel', array_filter([
+                        'posting_group' => $livewire->getTableFilterState('customer_posting_group_id')['value'] ?? null,
+                        'with_balance' => ($livewire->getTableFilterState('with_balance')['value'] ?? null) === true ? 1 : null,
+                    ])))
+                    ->openUrlInNewTab(),
+            ])
             ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),
@@ -102,6 +142,14 @@ class CustomerResource extends Resource
     public static function numberSeriesCode(): ?string
     {
         return SalesSetup::query()->value('customer_nos');
+    }
+
+    protected static function customerIdsWithBalance(): Builder
+    {
+        return CustomerLedgerEntry::query()
+            ->groupBy('customer_id')
+            ->havingRaw('SUM(amount) <> 0')
+            ->select('customer_id');
     }
 
     public static function canViewAny(): bool
