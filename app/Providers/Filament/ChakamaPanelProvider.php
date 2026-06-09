@@ -17,6 +17,7 @@ use App\Filament\Resources\Finance\CustomerPostingGroups\CustomerPostingGroupRes
 use App\Filament\Resources\Finance\CustomerResource;
 use App\Filament\Resources\Finance\DirectExpenses\DirectExpenseResource;
 use App\Filament\Resources\Finance\DirectIncomes\DirectIncomeResource;
+use App\Filament\Resources\Finance\GeneralPostingSetups\GeneralPostingSetupResource;
 use App\Filament\Resources\Finance\GlAccounts\GlAccountResource;
 use App\Filament\Resources\Finance\GlEntries\GlEntryResource;
 use App\Filament\Resources\Finance\NumberSeries\NumberSeriesResource;
@@ -87,6 +88,7 @@ class ChakamaPanelProvider extends PanelProvider
                 CustomerLedgerEntryResource::class,
                 CustomerPostingGroupResource::class,
                 CustomerResource::class,
+                GeneralPostingSetupResource::class,
                 GlAccountResource::class,
                 GlEntryResource::class,
                 NumberSeriesResource::class,

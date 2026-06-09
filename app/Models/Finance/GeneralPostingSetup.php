@@ -28,4 +28,9 @@ class GeneralPostingSetup extends Model
     {
         return $this->belongsTo(ServicePostingGroup::class);
     }
+
+    public function salesAccount(): BelongsTo
+    {
+        return $this->belongsTo(GlAccount::class, 'sales_account_no', 'no');
+    }
 }

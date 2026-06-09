@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Finance\GeneralPostingSetups\Schemas;
 
+use App\Models\Finance\GlAccount;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class GeneralPostingSetupForm
@@ -24,10 +24,13 @@ class GeneralPostingSetupForm
                     ->searchable()
                     ->preload()
                     ->required(),
-                TextInput::make('sales_account_no')
-                    ->label('Sales Account No')
-                    ->required()
-                    ->maxLength(20),
+                Select::make('sales_account_no')
+                    ->label('Sales Account')
+                    ->relationship('salesAccount', 'name')
+                    ->getOptionLabelFromRecordUsing(fn (GlAccount $record): string => "{$record->no} - {$record->name}")
+                    ->searchable(['no', 'name'])
+                    ->preload()
+                    ->required(),
             ]);
     }
 }
