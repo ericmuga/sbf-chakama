@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\FinanceListExportController;
 use App\Http\Controllers\MemberStatementController;
 use App\Http\Controllers\TemplateController;
 use App\Livewire\Members\MemberCard;
@@ -23,6 +24,8 @@ Route::middleware(['auth'])->prefix('admin/reports')->name('admin.reports.')->gr
     Route::get('receipts/export-excel', [MemberStatementController::class, 'downloadReceiptsExcel'])->name('receipts.excel');
     Route::get('invoices/{invoice:no}/pdf', [MemberStatementController::class, 'downloadInvoicePdf'])->name('invoice.pdf');
     Route::get('chakama-member-report/pdf', [MemberStatementController::class, 'downloadChakamaMemberReportPdf'])->name('chakama-member-report.pdf');
+    Route::get('customers/export-excel', [FinanceListExportController::class, 'customers'])->name('customers.export-excel');
+    Route::get('vendors/export-excel', [FinanceListExportController::class, 'vendors'])->name('vendors.export-excel');
 });
 
 Route::middleware(['auth'])->prefix('admin/templates')->name('admin.templates.')->group(function () {
