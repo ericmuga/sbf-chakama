@@ -17,7 +17,8 @@ class CreateSalesHeader extends CreateRecord
     protected function getFormActions(): array
     {
         return [
-            $this->getCreateFormAction(),
+            $this->getCreateFormAction()
+                ->label('Save Draft'),
             Action::make('createAndPost')
                 ->label('Create & Post')
                 ->color('success')

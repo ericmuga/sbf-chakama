@@ -10,7 +10,9 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class SalesHeadersTable
 {
@@ -40,6 +42,20 @@ class SalesHeadersTable
                         default => 'warning',
                     }),
             ])
+            ->filters([
+                SelectFilter::make('status')
+                    ->options([
+                        'open' => 'Open',
+                        'posted' => 'Posted',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $status = $data['value'] ?? null;
+
+                        return $status
+                            ? $query->whereRaw('LOWER(status) = ?', [$status])
+                            : $query;
+                    }),
+            ])
             ->defaultSort('posting_date', 'desc')
             ->recordActions([
                 Action::make('post')
@@ -47,7 +63,7 @@ class SalesHeadersTable
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->hidden(fn (SalesHeader $record): bool => $record->status === 'posted')
+                    ->hidden(fn (SalesHeader $record): bool => $record->isPosted())
                     ->action(function (SalesHeader $record): void {
                         try {
                             app(SalesPostingService::class)->post($record);
@@ -57,7 +73,7 @@ class SalesHeadersTable
                         }
                     }),
                 EditAction::make()
-                    ->hidden(fn (SalesHeader $record): bool => $record->status === 'posted'),
+                    ->hidden(fn (SalesHeader $record): bool => $record->isPosted()),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

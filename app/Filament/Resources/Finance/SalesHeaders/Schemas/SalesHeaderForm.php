@@ -59,6 +59,8 @@ class SalesHeaderForm
                         'posted' => 'Posted',
                     ])
                     ->default('open')
+                    ->disabled()
+                    ->dehydrated()
                     ->required(),
 
                 Repeater::make('salesLines')
@@ -67,7 +69,14 @@ class SalesHeaderForm
                     ->schema([
                         Select::make('service_id')
                             ->label('Service')
-                            ->options(fn () => Service::where('is_sellable', true)->pluck('description', 'id'))
+                            ->options(fn (): array => Service::query()
+                                ->where('is_sellable', true)
+                                ->orderBy('code')
+                                ->get()
+                                ->mapWithKeys(fn (Service $service): array => [
+                                    $service->id => "{$service->code} - {$service->description}",
+                                ])
+                                ->all())
                             ->searchable()
                             ->required()
                             ->live()

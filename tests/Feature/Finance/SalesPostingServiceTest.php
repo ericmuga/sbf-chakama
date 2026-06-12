@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Finance;
 
+use App\Filament\Resources\Finance\SalesHeaders\SalesHeaderResource;
 use App\Models\Finance\Customer;
 use App\Models\Finance\CustomerLedgerEntry;
 use App\Models\Finance\CustomerPostingGroup;
@@ -9,6 +10,7 @@ use App\Models\Finance\GeneralPostingSetup;
 use App\Models\Finance\SalesHeader;
 use App\Models\Finance\SalesLine;
 use App\Models\Finance\ServicePostingGroup;
+use App\Models\User;
 use App\Services\Finance\SalesPostingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -110,6 +112,29 @@ class SalesPostingServiceTest extends TestCase
         $this->expectExceptionMessage('already posted');
 
         $this->service->post($header);
+    }
+
+    public function test_throws_if_already_posted_with_legacy_status_casing(): void
+    {
+        $header = SalesHeader::factory()->create(['status' => 'Posted']);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('already posted');
+
+        $this->service->post($header);
+    }
+
+    public function test_resource_disallows_editing_and_deleting_posted_sales_documents(): void
+    {
+        $this->actingAs(User::factory()->admin()->create());
+
+        $openHeader = SalesHeader::factory()->create(['status' => 'open']);
+        $postedHeader = SalesHeader::factory()->create(['status' => 'Posted']);
+
+        $this->assertTrue(SalesHeaderResource::canEdit($openHeader));
+        $this->assertTrue(SalesHeaderResource::canDelete($openHeader));
+        $this->assertFalse(SalesHeaderResource::canEdit($postedHeader));
+        $this->assertFalse(SalesHeaderResource::canDelete($postedHeader));
     }
 
     public function test_throws_if_no_lines(): void

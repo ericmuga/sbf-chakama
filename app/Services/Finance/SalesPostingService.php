@@ -17,7 +17,7 @@ class SalesPostingService
      */
     public function post(SalesHeader $header): void
     {
-        if ($header->status === 'posted') {
+        if ($header->isPosted()) {
             throw new \RuntimeException('Document is already posted.');
         }
 

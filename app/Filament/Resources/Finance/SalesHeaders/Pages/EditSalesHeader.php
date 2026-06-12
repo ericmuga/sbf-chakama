@@ -24,7 +24,7 @@ class EditSalesHeader extends EditRecord
                 ->requiresConfirmation()
                 ->modalHeading('Post Sales Invoice')
                 ->modalDescription('This will post the document to the customer and G/L ledgers. This cannot be undone.')
-                ->hidden(fn (SalesHeader $record): bool => $record->status === 'posted')
+                ->hidden(fn (SalesHeader $record): bool => $record->isPosted())
                 ->action(function (SalesHeader $record): void {
                     try {
                         app(SalesPostingService::class)->post($record);
@@ -35,7 +35,7 @@ class EditSalesHeader extends EditRecord
                     }
                 }),
             DeleteAction::make()
-                ->hidden(fn (SalesHeader $record): bool => $record->status === 'posted'),
+                ->hidden(fn (SalesHeader $record): bool => $record->isPosted()),
         ];
     }
 }
