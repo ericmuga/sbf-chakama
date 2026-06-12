@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Finance\DirectExpenses\RelationManagers;
+namespace App\Filament\Resources\Finance\DirectIncomes\RelationManagers;
 
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
