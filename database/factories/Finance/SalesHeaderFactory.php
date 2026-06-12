@@ -23,12 +23,12 @@ class SalesHeaderFactory extends Factory
         return [
             'no' => fake()->unique()->numerify('SINV-######'),
             'customer_id' => Customer::factory(),
-            'document_type' => 'Invoice',
+            'document_type' => 'invoice',
             'posting_date' => $postingDate,
             'due_date' => fake()->optional()->dateTimeBetween($postingDate, '+60 days'),
             'customer_posting_group_id' => CustomerPostingGroup::factory(),
             'number_series_code' => $numberSeries->code,
-            'status' => 'Open',
+            'status' => 'open',
         ];
     }
 }

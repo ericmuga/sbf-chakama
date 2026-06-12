@@ -44,12 +44,16 @@ class SalesHeaderResource extends Resource
 
     public static function canEdit(Model $record): bool
     {
-        return auth()->user()?->isAdmin() ?? false;
+        return (auth()->user()?->isAdmin() ?? false)
+            && $record instanceof SalesHeader
+            && ! $record->isPosted();
     }
 
     public static function canDelete(Model $record): bool
     {
-        return auth()->user()?->isAdmin() ?? false;
+        return (auth()->user()?->isAdmin() ?? false)
+            && $record instanceof SalesHeader
+            && ! $record->isPosted();
     }
 
     public static function form(Schema $schema): Schema

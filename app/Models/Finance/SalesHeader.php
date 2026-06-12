@@ -5,6 +5,7 @@ namespace App\Models\Finance;
 use App\Models\ShareBillingRun;
 use App\Models\ShareSubscription;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -36,6 +37,19 @@ class SalesHeader extends Model
             'posting_date' => 'date',
             'due_date' => 'date',
         ];
+    }
+
+    public function isPosted(): bool
+    {
+        return strcasecmp((string) $this->status, 'posted') === 0;
+    }
+
+    protected function status(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value): ?string => $value === null ? null : strtolower($value),
+            set: fn (?string $value): ?string => $value === null ? null : strtolower($value),
+        );
     }
 
     public function customer(): BelongsTo
