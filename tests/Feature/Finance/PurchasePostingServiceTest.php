@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\Finance;
 
+use App\Filament\Resources\Finance\PurchaseHeaders\PurchaseHeaderResource;
 use App\Models\Finance\PurchaseHeader;
 use App\Models\Finance\PurchaseLine;
 use App\Models\Finance\Vendor;
 use App\Models\Finance\VendorLedgerEntry;
 use App\Models\Finance\VendorPostingGroup;
+use App\Models\User;
 use App\Services\Finance\PurchasePostingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -94,6 +96,29 @@ class PurchasePostingServiceTest extends TestCase
         $this->expectExceptionMessage('already posted');
 
         $this->service->post($header);
+    }
+
+    public function test_throws_if_already_posted_with_legacy_status_casing(): void
+    {
+        $header = PurchaseHeader::factory()->create(['status' => 'Posted']);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('already posted');
+
+        $this->service->post($header);
+    }
+
+    public function test_resource_disallows_editing_and_deleting_posted_purchase_documents(): void
+    {
+        $this->actingAs(User::factory()->admin()->create());
+
+        $openHeader = PurchaseHeader::factory()->create(['status' => 'open']);
+        $postedHeader = PurchaseHeader::factory()->create(['status' => 'Posted']);
+
+        $this->assertTrue(PurchaseHeaderResource::canEdit($openHeader));
+        $this->assertTrue(PurchaseHeaderResource::canDelete($openHeader));
+        $this->assertFalse(PurchaseHeaderResource::canEdit($postedHeader));
+        $this->assertFalse(PurchaseHeaderResource::canDelete($postedHeader));
     }
 
     public function test_throws_if_no_lines(): void

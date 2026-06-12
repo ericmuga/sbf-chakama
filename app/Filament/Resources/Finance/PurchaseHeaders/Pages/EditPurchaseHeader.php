@@ -24,7 +24,7 @@ class EditPurchaseHeader extends EditRecord
                 ->requiresConfirmation()
                 ->modalHeading('Post Purchase Invoice')
                 ->modalDescription('This will post the document to the vendor and G/L ledgers. This cannot be undone.')
-                ->hidden(fn (PurchaseHeader $record): bool => $record->status === 'posted')
+                ->hidden(fn (PurchaseHeader $record): bool => $record->isPosted())
                 ->action(function (PurchaseHeader $record): void {
                     try {
                         app(PurchasePostingService::class)->post($record);
@@ -35,7 +35,7 @@ class EditPurchaseHeader extends EditRecord
                     }
                 }),
             DeleteAction::make()
-                ->hidden(fn (PurchaseHeader $record): bool => $record->status === 'posted'),
+                ->hidden(fn (PurchaseHeader $record): bool => $record->isPosted()),
         ];
     }
 }

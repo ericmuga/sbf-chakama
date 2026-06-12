@@ -27,7 +27,7 @@ class PurchaseHeaderFactory extends Factory
             'due_date' => fake()->optional()->dateTimeBetween($postingDate, '+60 days'),
             'vendor_posting_group_id' => VendorPostingGroup::factory(),
             'number_series_code' => $numberSeries->code,
-            'status' => 'Open',
+            'status' => 'open',
         ];
     }
 }

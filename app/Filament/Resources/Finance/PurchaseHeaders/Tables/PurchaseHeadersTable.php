@@ -2,11 +2,14 @@
 
 namespace App\Filament\Resources\Finance\PurchaseHeaders\Tables;
 
+use App\Models\Finance\PurchaseHeader;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class PurchaseHeadersTable
 {
@@ -38,9 +41,24 @@ class PurchaseHeadersTable
                         default => 'warning',
                     }),
             ])
+            ->filters([
+                SelectFilter::make('status')
+                    ->options([
+                        'open' => 'Open',
+                        'posted' => 'Posted',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $status = $data['value'] ?? null;
+
+                        return $status
+                            ? $query->whereRaw('LOWER(status) = ?', [$status])
+                            : $query;
+                    }),
+            ])
             ->defaultSort('posting_date', 'desc')
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->hidden(fn (PurchaseHeader $record): bool => $record->isPosted()),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
