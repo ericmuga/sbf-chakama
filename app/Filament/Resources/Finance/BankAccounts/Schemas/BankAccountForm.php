@@ -2,8 +2,12 @@
 
 namespace App\Filament\Resources\Finance\BankAccounts\Schemas;
 
+use App\Models\Finance\BankPostingGroup;
+use App\Models\Finance\GlAccount;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class BankAccountForm
@@ -26,7 +30,23 @@ class BankAccountForm
                     ->label('Bank Posting Group')
                     ->relationship('bankPostingGroup', 'description')
                     ->searchable()
-                    ->preload(),
+                    ->preload()
+                    ->live(),
+                Placeholder::make('bank_gl_account')
+                    ->label('Mapped Bank G/L Account')
+                    ->content(function (Get $get): string {
+                        $group = $get('bank_posting_group_id')
+                            ? BankPostingGroup::find($get('bank_posting_group_id'))
+                            : null;
+
+                        if (! $group?->bank_account_gl_no) {
+                            return '— not mapped —';
+                        }
+
+                        $name = GlAccount::where('no', $group->bank_account_gl_no)->value('name');
+
+                        return $name ? "{$group->bank_account_gl_no} · {$name}" : $group->bank_account_gl_no;
+                    }),
                 TextInput::make('currency_code')
                     ->label('Currency Code')
                     ->maxLength(10)

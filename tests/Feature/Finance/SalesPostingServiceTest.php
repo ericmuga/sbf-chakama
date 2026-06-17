@@ -89,6 +89,82 @@ class SalesPostingServiceTest extends TestCase
         ]);
     }
 
+    public function test_posts_credit_memo_as_negative_and_mirrors_gl(): void
+    {
+        ['header' => $header, 'cpg' => $cpg, 'gps' => $gps] = $this->makeFullSetup();
+        $header->update(['document_type' => 'credit_memo']);
+
+        $this->service->post($header);
+
+        $this->assertDatabaseHas('customer_ledger_entries', [
+            'document_no' => $header->no,
+            'document_type' => 'credit_memo',
+            'amount' => -1000.00,
+            'remaining_amount' => -1000.00,
+        ]);
+
+        // Receivables is credited (not debited) for a credit memo
+        $this->assertDatabaseHas('gl_entries', [
+            'document_no' => $header->no,
+            'account_no' => $cpg->receivables_account_no,
+            'debit_amount' => 0,
+            'credit_amount' => 1000.00,
+        ]);
+
+        // Revenue is debited (not credited) for a credit memo
+        $this->assertDatabaseHas('gl_entries', [
+            'document_no' => $header->no,
+            'account_no' => $gps->sales_account_no,
+            'debit_amount' => 1000.00,
+            'credit_amount' => 0,
+        ]);
+    }
+
+    public function test_credit_memo_allocates_against_named_open_invoice(): void
+    {
+        ['customer' => $customer, 'cpg' => $cpg, 'spg' => $spg, 'gps' => $gps] = $this->makeFullSetup();
+
+        // An open invoice ledger entry to apply the credit memo against
+        $invoiceEntry = CustomerLedgerEntry::factory()->create([
+            'customer_id' => $customer->id,
+            'document_type' => 'invoice',
+            'document_no' => 'SI-OPEN-1',
+            'amount' => 1000.00,
+            'remaining_amount' => 1000.00,
+            'is_open' => true,
+        ]);
+
+        $creditMemo = SalesHeader::factory()->create([
+            'customer_id' => $customer->id,
+            'customer_posting_group_id' => $cpg->id,
+            'document_type' => 'credit_memo',
+            'applies_to_doc_no' => 'SI-OPEN-1',
+            'status' => 'open',
+        ]);
+        SalesLine::factory()->create([
+            'sales_header_id' => $creditMemo->id,
+            'service_posting_group_id' => $spg->id,
+            'customer_posting_group_id' => $cpg->id,
+            'general_posting_setup_id' => $gps->id,
+            'line_amount' => 400.00,
+        ]);
+
+        $this->service->post($creditMemo);
+
+        // Invoice remaining reduced by the credit memo amount
+        $invoiceEntry->refresh();
+        $this->assertEquals(600.00, (float) $invoiceEntry->remaining_amount);
+        $this->assertTrue($invoiceEntry->is_open);
+
+        // Credit memo entry fully applied and closed
+        $this->assertDatabaseHas('customer_ledger_entries', [
+            'document_no' => $creditMemo->no,
+            'amount' => -400.00,
+            'remaining_amount' => 0,
+            'is_open' => false,
+        ]);
+    }
+
     public function test_assigns_sequential_entry_no(): void
     {
         CustomerLedgerEntry::factory()->create(['entry_no' => 10]);

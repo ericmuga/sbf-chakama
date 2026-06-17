@@ -13,12 +13,14 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 class SalesHeadersTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->withSum('salesLines', 'line_amount'))
             ->columns([
                 TextColumn::make('no')
                     ->label('Document No')
@@ -29,6 +31,10 @@ class SalesHeadersTable
                 TextColumn::make('customer.name')
                     ->label('Customer')
                     ->searchable()
+                    ->sortable(),
+                TextColumn::make('sales_lines_sum_line_amount')
+                    ->label('Amount')
+                    ->money('KES')
                     ->sortable(),
                 TextColumn::make('posting_date')
                     ->date()
@@ -77,7 +83,17 @@ class SalesHeadersTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->before(function (DeleteBulkAction $action, Collection $records): void {
+                            if ($records->contains(fn (SalesHeader $record): bool => $record->isPosted())) {
+                                Notification::make()
+                                    ->title('Posted sales documents cannot be deleted.')
+                                    ->danger()
+                                    ->send();
+
+                                $action->halt();
+                            }
+                        }),
                 ]),
             ]);
     }

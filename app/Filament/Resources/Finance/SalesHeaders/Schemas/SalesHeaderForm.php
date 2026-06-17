@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Finance\SalesHeaders\Schemas;
 
 use App\Models\Finance\Customer;
+use App\Models\Finance\CustomerLedgerEntry;
 use App\Models\Finance\Service;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
@@ -29,7 +30,26 @@ class SalesHeaderForm
                         'invoice' => 'Invoice',
                         'credit_memo' => 'Credit Memo',
                     ])
-                    ->required(),
+                    ->required()
+                    ->live(),
+                Select::make('applies_to_doc_no')
+                    ->label('Applies-to Invoice')
+                    ->helperText('Open posted invoice this credit memo will be allocated against on posting.')
+                    ->options(fn (Get $get): array => empty($get('customer_id'))
+                        ? []
+                        : CustomerLedgerEntry::query()
+                            ->where('customer_id', $get('customer_id'))
+                            ->where('document_type', 'invoice')
+                            ->where('is_open', true)
+                            ->where('amount', '>', 0)
+                            ->orderBy('due_date')
+                            ->get()
+                            ->mapWithKeys(fn (CustomerLedgerEntry $entry): array => [
+                                $entry->document_no => "{$entry->document_no} — bal ".number_format((float) $entry->remaining_amount, 2),
+                            ])
+                            ->all())
+                    ->searchable()
+                    ->visible(fn (Get $get): bool => $get('document_type') === 'credit_memo'),
                 Select::make('customer_id')
                     ->label('Customer')
                     ->relationship('customer', 'name')
