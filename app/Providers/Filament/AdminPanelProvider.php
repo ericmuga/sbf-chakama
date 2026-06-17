@@ -7,6 +7,7 @@ use App\Filament\Resources\ClaimApprovalTemplates\ClaimApprovalTemplateResource;
 use App\Filament\Resources\Claims\ClaimResource;
 use App\Filament\Resources\Finance\BankAccounts\BankAccountResource;
 use App\Filament\Resources\Finance\BankLedgerEntries\BankLedgerEntryResource;
+use App\Filament\Resources\Finance\BankPostingGroups\BankPostingGroupResource;
 use App\Filament\Resources\Finance\CashReceipts\CashReceiptResource;
 use App\Filament\Resources\Finance\CustomerLedgerEntries\CustomerLedgerEntryResource;
 use App\Filament\Resources\Finance\CustomerPostingGroups\CustomerPostingGroupResource;
@@ -78,6 +79,7 @@ class AdminPanelProvider extends PanelProvider
                 DirectIncomeResource::class,
                 CashReceiptResource::class,
                 BankLedgerEntryResource::class,
+                BankPostingGroupResource::class,
                 CustomerLedgerEntryResource::class,
                 CustomerPostingGroupResource::class,
                 CustomerResource::class,
