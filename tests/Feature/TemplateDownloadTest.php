@@ -24,8 +24,10 @@ class TemplateDownloadTest extends TestCase
         $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
 
         $content = $response->streamedContent();
-        $this->assertStringContainsString('no,name,identity_type,identity_no', $content);
-        $this->assertStringContainsString('MBR-001', $content);
+        $this->assertStringContainsString('name,identity_type,identity_no', $content);
+        $this->assertStringNotContainsString('customer_no', $content);
+        $this->assertStringNotContainsString('vendor_no', $content);
+        $this->assertStringContainsString('John Doe', $content);
     }
 
     public function test_dependants_template_downloads_as_csv(): void

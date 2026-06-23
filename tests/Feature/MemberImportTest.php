@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Dependant;
 use App\Models\Member;
 use App\Models\NextOfKin;
+use App\Services\MemberImportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -30,44 +31,87 @@ class MemberImportTest extends TestCase
         return $path;
     }
 
-    public function test_members_can_be_imported_from_csv(): void
+    private function importMembers(array $rows): array
     {
         $csvPath = $this->writeCsv('members.csv', [
-            'no', 'name', 'identity_type', 'identity_no', 'phone', 'email',
-            'date_of_birth', 'member_status', 'customer_no', 'vendor_no', 'is_chakama', 'is_sbf',
-        ], [
-            ['MBR-001', 'John Doe', 'national_id', '12345678', '0712345678', 'john@example.com', '1990-01-15', 'active', '', '', '0', '0'],
-            ['MBR-002', 'Jane Doe', 'national_id', '87654321', '0712345679', 'jane@example.com', '1992-05-20', 'active', '', '', '1', '0'],
-        ]);
+            'name', 'identity_type', 'identity_no', 'phone', 'email',
+            'date_of_birth', 'member_status', 'is_chakama', 'is_sbf',
+        ], $rows);
 
-        $path = Storage::disk('local')->path($csvPath);
-        $handle = fopen($path, 'r');
-        $headers = fgetcsv($handle);
-
-        while (($row = fgetcsv($handle)) !== false) {
-            $record = array_combine($headers, $row);
-            Member::updateOrCreate(
-                ['no' => $record['no'] ?: null],
-                array_filter([
-                    'no' => $record['no'] ?: null,
-                    'name' => $record['name'] ?: null,
-                    'identity_type' => $record['identity_type'] ?: 'national_id',
-                    'identity_no' => $record['identity_no'] ?: null,
-                    'phone' => $record['phone'] ?: null,
-                    'email' => $record['email'] ?: null,
-                    'date_of_birth' => $record['date_of_birth'] ?: null,
-                    'member_status' => $record['member_status'] ?: null,
-                    'is_chakama' => (bool) $record['is_chakama'],
-                    'is_sbf' => (bool) $record['is_sbf'],
-                    'type' => 'member',
-                ], fn ($v) => $v !== null && $v !== '')
-            );
-        }
+        $handle = fopen(Storage::disk('local')->path($csvPath), 'r');
+        $result = app(MemberImportService::class)->importFromHandle($handle);
         fclose($handle);
 
-        $this->assertDatabaseHas('bus_members', ['no' => 'MBR-001', 'name' => 'John Doe']);
-        $this->assertDatabaseHas('bus_members', ['no' => 'MBR-002', 'name' => 'Jane Doe']);
+        return $result;
+    }
+
+    public function test_members_can_be_imported_from_csv(): void
+    {
+        $result = $this->importMembers([
+            ['John Doe', 'national_id', '12345678', '0712345678', 'john@example.com', '1990-01-15', 'active', '0', '0'],
+            ['Jane Doe', 'national_id', '87654321', '0712345679', 'jane@example.com', '1992-05-20', 'active', '1', '0'],
+        ]);
+
+        $this->assertSame(2, $result['imported']);
+        $this->assertSame([], $result['skipped']);
+        $this->assertDatabaseHas('bus_members', ['identity_no' => '12345678', 'name' => 'John Doe']);
+        $this->assertDatabaseHas('bus_members', ['identity_no' => '87654321', 'name' => 'Jane Doe']);
         $this->assertEquals(2, Member::members()->count());
+    }
+
+    public function test_member_no_customer_no_and_vendor_no_are_not_read_from_the_file(): void
+    {
+        $this->importMembers([
+            ['John Doe', 'national_id', '12345678', '0712345678', 'john@example.com', '1990-01-15', 'active', '0', '0'],
+        ]);
+
+        $member = Member::where('identity_no', '12345678')->first();
+
+        $this->assertNotNull($member);
+        $this->assertSame('member', $member->type);
+    }
+
+    public function test_rows_with_duplicate_phone_are_skipped_and_flagged(): void
+    {
+        Member::factory()->create(['phone' => '0712345678']);
+
+        $result = $this->importMembers([
+            ['John Doe', 'national_id', '12345678', '0712345678', 'john@example.com', '', '', '0', '0'],
+            ['Jane Doe', 'national_id', '87654321', '0700000000', 'jane@example.com', '', '', '0', '0'],
+        ]);
+
+        $this->assertSame(1, $result['imported']);
+        $this->assertCount(1, $result['skipped']);
+        $this->assertStringContainsString('duplicate phone 0712345678', $result['skipped'][0]);
+        $this->assertDatabaseMissing('bus_members', ['identity_no' => '12345678']);
+        $this->assertDatabaseHas('bus_members', ['identity_no' => '87654321']);
+    }
+
+    public function test_rows_with_duplicate_email_are_skipped_and_flagged(): void
+    {
+        Member::factory()->create(['email' => 'john@example.com']);
+
+        $result = $this->importMembers([
+            ['John Doe', 'national_id', '12345678', '0712345678', 'john@example.com', '', '', '0', '0'],
+        ]);
+
+        $this->assertSame(0, $result['imported']);
+        $this->assertCount(1, $result['skipped']);
+        $this->assertStringContainsString('duplicate email john@example.com', $result['skipped'][0]);
+        $this->assertDatabaseMissing('bus_members', ['identity_no' => '12345678']);
+    }
+
+    public function test_duplicate_phone_within_the_same_file_is_skipped(): void
+    {
+        $result = $this->importMembers([
+            ['John Doe', 'national_id', '12345678', '0712345678', 'john@example.com', '', '', '0', '0'],
+            ['Jane Doe', 'national_id', '87654321', '0712345678', 'jane@example.com', '', '', '0', '0'],
+        ]);
+
+        $this->assertSame(1, $result['imported']);
+        $this->assertCount(1, $result['skipped']);
+        $this->assertDatabaseHas('bus_members', ['identity_no' => '12345678']);
+        $this->assertDatabaseMissing('bus_members', ['identity_no' => '87654321']);
     }
 
     public function test_import_skips_rows_with_unknown_member_no_for_dependants(): void

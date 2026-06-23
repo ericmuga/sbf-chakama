@@ -9,14 +9,13 @@ class TemplateController extends Controller
     public function members(): StreamedResponse
     {
         $headers = [
-            'no', 'name', 'identity_type', 'identity_no', 'phone', 'email',
-            'date_of_birth', 'member_status', 'customer_no', 'vendor_no',
-            'is_chakama', 'is_sbf',
+            'name', 'identity_type', 'identity_no', 'phone', 'email',
+            'date_of_birth', 'member_status', 'is_chakama', 'is_sbf',
         ];
 
         $example = [
-            'MBR-001', 'John Doe', 'national_id', '12345678', '0712345678',
-            'john@example.com', '1990-01-15', 'active', 'CUST-001', '', '1', '0',
+            'John Doe', 'national_id', '12345678', '0712345678',
+            'john@example.com', '1990-01-15', 'active', '1', '0',
         ];
 
         return $this->streamCsv('members_template.csv', $headers, [$example]);

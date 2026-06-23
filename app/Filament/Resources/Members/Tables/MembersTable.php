@@ -5,11 +5,13 @@ namespace App\Filament\Resources\Members\Tables;
 use App\Models\Finance\Customer;
 use App\Models\Finance\CustomerLedgerEntry;
 use App\Models\Member;
+use App\Services\MemberImportService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
+use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -87,34 +89,25 @@ class MembersTable
                             ->acceptedFileTypes(['text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel'])
                             ->required(),
                     ])
-                    ->action(function (array $data) {
+                    ->action(function (array $data, MemberImportService $importer) {
                         $path = Storage::disk('local')->path($data['file']);
                         $handle = fopen($path, 'r');
-                        $headers = fgetcsv($handle);
-
-                        while (($row = fgetcsv($handle)) !== false) {
-                            $record = array_combine($headers, $row);
-                            Member::updateOrCreate(
-                                ['no' => $record['no'] ?: null],
-                                array_filter([
-                                    'no' => $record['no'] ?: null,
-                                    'name' => $record['name'] ?: null,
-                                    'identity_type' => $record['identity_type'] ?: 'national_id',
-                                    'identity_no' => $record['identity_no'] ?: null,
-                                    'phone' => $record['phone'] ?: null,
-                                    'email' => $record['email'] ?: null,
-                                    'date_of_birth' => $record['date_of_birth'] ?: null,
-                                    'member_status' => $record['member_status'] ?: null,
-                                    'customer_no' => $record['customer_no'] ?: null,
-                                    'vendor_no' => $record['vendor_no'] ?: null,
-                                    'is_chakama' => isset($record['is_chakama']) ? (bool) $record['is_chakama'] : false,
-                                    'is_sbf' => isset($record['is_sbf']) ? (bool) $record['is_sbf'] : false,
-                                    'type' => 'member',
-                                ], fn ($v) => $v !== null && $v !== '')
-                            );
-                        }
+                        $result = $importer->importFromHandle($handle);
                         fclose($handle);
                         Storage::disk('local')->delete($data['file']);
+
+                        $notification = Notification::make()
+                            ->title("{$result['imported']} member(s) imported");
+
+                        if (count($result['skipped']) > 0) {
+                            $notification
+                                ->warning()
+                                ->body(count($result['skipped']).' row(s) skipped:'.PHP_EOL.implode(PHP_EOL, $result['skipped']));
+                        } else {
+                            $notification->success();
+                        }
+
+                        $notification->send();
                     }),
             ])
             ->recordActions([
