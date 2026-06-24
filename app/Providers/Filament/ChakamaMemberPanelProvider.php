@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Enums\EntityDimension;
 use App\Http\Middleware\EnsureChakamaMemberAccess;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -9,7 +10,6 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -28,7 +28,7 @@ class ChakamaMemberPanelProvider extends PanelProvider
             ->login()
             ->brandName('Chakama Ranch — Member Portal')
             ->colors([
-                'primary' => Color::Emerald,
+                'primary' => EntityDimension::Chakama->palette(),
             ])
             ->databaseNotifications()
             ->profile()

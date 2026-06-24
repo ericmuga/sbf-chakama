@@ -1,3 +1,4 @@
+@php($brandColor = $brandColor ?? \App\Support\Brand::primaryHex())
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +8,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 11px; color: #1a1a1a; }
 
-        .header { background: #1E3A5F; color: white; padding: 18px 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .header { background: {{ $brandColor }}; color: white; padding: 18px 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; }
         .header-left h1 { font-size: 18px; font-weight: bold; letter-spacing: 0.5px; }
         .header-left p { font-size: 9px; opacity: 0.8; margin-top: 2px; }
         .header-right { text-align: right; }

@@ -1,3 +1,4 @@
+@php($brandColor = $brandColor ?? \App\Support\Brand::primaryHex())
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +8,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 11px; color: #1a1a1a; }
 
-        .header { background: #1E3A5F; color: white; padding: 18px 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .header { background: {{ $brandColor }}; color: white; padding: 18px 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; }
         .header-left h1 { font-size: 18px; font-weight: bold; letter-spacing: 0.5px; }
         .header-left p { font-size: 9px; opacity: 0.85; margin-top: 2px; }
         .header-right { text-align: right; }
@@ -36,7 +37,7 @@
         .totals td { padding: 6px 8px; font-size: 11px; }
         .totals td:first-child { color: #6B7280; }
         .totals td:last-child { text-align: right; font-family: 'Courier New', monospace; font-weight: 600; }
-        .totals tr.grand td { font-size: 14px; font-weight: bold; color: #111827; border-top: 2px solid #1E3A5F; padding-top: 8px; }
+        .totals tr.grand td { font-size: 14px; font-weight: bold; color: #111827; border-top: 2px solid {{ $brandColor }}; padding-top: 8px; }
 
         .status-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
         .status-open { background: #FEF3C7; color: #92400E; }

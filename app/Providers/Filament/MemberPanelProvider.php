@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Enums\EntityDimension;
 use App\Http\Middleware\EnsureMemberAccess;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -9,7 +10,6 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -27,7 +27,7 @@ class MemberPanelProvider extends PanelProvider
             ->login()
             ->brandName('SBF & Chakama — Member Portal')
             ->colors([
-                'primary' => Color::Indigo,
+                'primary' => EntityDimension::Sbf->palette(),
             ])
             ->databaseNotifications()
             ->profile()

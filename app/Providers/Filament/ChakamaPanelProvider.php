@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Enums\EntityDimension;
 use App\Filament\Resources\Chakama\ChakamaMemberReports\ChakamaMemberReportResource;
 use App\Filament\Resources\Chakama\FundAccountResource;
 use App\Filament\Resources\Chakama\FundsBankAccountResource;
@@ -43,7 +44,6 @@ use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -62,7 +62,7 @@ class ChakamaPanelProvider extends PanelProvider
             ->login()
             ->brandName('Chakama Ranch')
             ->colors([
-                'primary' => Color::Emerald,
+                'primary' => EntityDimension::Chakama->palette(),
             ])
             ->resources([
                 // Members

@@ -1,3 +1,4 @@
+@php($brandColor = $brandColor ?? \App\Support\Brand::primaryHex(\App\Enums\EntityDimension::Chakama))
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,13 +8,13 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 9px; color: #1a1a1a; }
 
-        .header { background: #1E3A5F; color: white; padding: 14px 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .header { background: {{ $brandColor }}; color: white; padding: 14px 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end; }
         .header h1 { font-size: 16px; font-weight: bold; }
         .header p { font-size: 9px; opacity: 0.85; margin-top: 2px; }
         .header-right { text-align: right; font-size: 9px; opacity: 0.85; }
 
         table.report { width: calc(100% - 24px); margin: 0 12px; border-collapse: collapse; }
-        table.report thead tr { background: #1E3A5F; color: white; }
+        table.report thead tr { background: {{ $brandColor }}; color: white; }
         table.report thead th { padding: 6px 6px; text-align: left; font-size: 9px; font-weight: 700; }
         table.report thead th.num { text-align: right; }
         table.report thead th.center { text-align: center; }
@@ -25,7 +26,7 @@
         table.report td.danger { color: #B91C1C; font-weight: 600; }
         table.report td.success { color: #15803D; }
 
-        tr.totals { background: #E8F0FE !important; font-weight: bold; border-top: 2px solid #1E3A5F; }
+        tr.totals { background: #E8F0FE !important; font-weight: bold; border-top: 2px solid {{ $brandColor }}; }
         tr.totals td { padding-top: 8px; padding-bottom: 8px; font-size: 10px; }
 
         .badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 8px; font-weight: bold; text-transform: uppercase; }

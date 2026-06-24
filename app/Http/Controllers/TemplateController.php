@@ -11,11 +11,13 @@ class TemplateController extends Controller
         $headers = [
             'name', 'identity_type', 'identity_no', 'phone', 'email',
             'date_of_birth', 'member_status', 'is_chakama', 'is_sbf',
+            'balance', 'balance_date',
         ];
 
         $example = [
             'John Doe', 'national_id', '12345678', '0712345678',
-            'john@example.com', '1990-01-15', 'active', '1', '0',
+            'john@example.com', '15/01/1990', 'active', '1', '0',
+            '2500.00', '01/06/2026',
         ];
 
         return $this->streamCsv('members_template.csv', $headers, [$example]);

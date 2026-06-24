@@ -6,11 +6,13 @@ use App\Models\Finance\Customer;
 use App\Models\Finance\CustomerLedgerEntry;
 use App\Models\Member;
 use App\Services\MemberImportService;
+use App\Services\MemberPurgeService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
@@ -88,16 +90,31 @@ class MembersTable
                             ->directory('imports')
                             ->acceptedFileTypes(['text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel'])
                             ->required(),
+                        Toggle::make('purge')
+                            ->label('Purge existing members first')
+                            ->helperText('Permanently delete ALL existing members and their finance records (customers, vendors, ledgers, invoices, claims, shares). Admin logins are kept. This cannot be undone.')
+                            ->default(false),
                     ])
-                    ->action(function (array $data, MemberImportService $importer) {
+                    ->action(function (array $data, MemberImportService $importer, MemberPurgeService $purger) {
+                        $purged = 0;
+
+                        if (! empty($data['purge'])) {
+                            $purged = $purger->purge();
+                        }
+
                         $path = Storage::disk('local')->path($data['file']);
                         $handle = fopen($path, 'r');
                         $result = $importer->importFromHandle($handle);
                         fclose($handle);
                         Storage::disk('local')->delete($data['file']);
 
-                        $notification = Notification::make()
-                            ->title("{$result['imported']} member(s) imported");
+                        $title = "{$result['imported']} member(s) imported";
+
+                        if ($purged > 0) {
+                            $title = "{$purged} purged, {$title}";
+                        }
+
+                        $notification = Notification::make()->title($title);
 
                         if (count($result['skipped']) > 0) {
                             $notification

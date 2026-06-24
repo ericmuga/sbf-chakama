@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Enums\EntityDimension;
 use App\Filament\Pages\SystemPage;
 use App\Filament\Resources\ClaimApprovalTemplates\ClaimApprovalTemplateResource;
 use App\Filament\Resources\Claims\ClaimResource;
@@ -47,7 +48,6 @@ use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -67,7 +67,7 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->brandName('SOBA Benevolent Fund')
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => EntityDimension::Sbf->palette(),
             ])
             ->resources([
                 UserResource::class,

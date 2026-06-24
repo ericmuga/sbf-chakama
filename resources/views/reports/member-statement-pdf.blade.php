@@ -1,3 +1,4 @@
+@php($brandColor = $brandColor ?? \App\Support\Brand::primaryHex())
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,7 +9,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 10px; color: #1a1a1a; }
 
-        .header { background: #1E3A5F; color: white; padding: 16px 20px; margin-bottom: 16px; }
+        .header { background: {{ $brandColor }}; color: white; padding: 16px 20px; margin-bottom: 16px; }
         .header h1 { font-size: 16px; font-weight: bold; }
         .header p { font-size: 10px; opacity: 0.85; margin-top: 2px; }
 
@@ -17,13 +18,13 @@
         .meta-block strong { color: #1a1a1a; }
 
         table { width: calc(100% - 40px); margin: 0 20px; border-collapse: collapse; }
-        thead tr { background: #1E3A5F; color: white; }
+        thead tr { background: {{ $brandColor }}; color: white; }
         thead th { padding: 6px 8px; text-align: left; font-size: 9px; font-weight: bold; }
         thead th.num { text-align: right; }
 
         tbody tr:nth-child(even) { background: #F8FAFC; }
         tbody tr.opening { background: #EFF6FF; }
-        tbody tr.totals { background: #E8F0FE; font-weight: bold; border-top: 2px solid #1E3A5F; }
+        tbody tr.totals { background: #E8F0FE; font-weight: bold; border-top: 2px solid {{ $brandColor }}; }
 
         td { padding: 5px 8px; font-size: 9px; border-bottom: 1px solid #E5E7EB; }
         td.num { text-align: right; font-family: 'Courier New', monospace; }
