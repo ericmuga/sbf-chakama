@@ -81,7 +81,8 @@ class IssueSeeder extends Seeder
             [
                 'title' => 'Share allocations', 'portal_type' => 'chakama',
                 'details' => 'The total amt in the completed share allocation is debited to individual members in the CATEGORY; disregarding individual member amt billable',
-                'date_assigned' => '2026-06-22', 'status' => 'open',
+                'date_assigned' => '2026-06-22', 'status' => 'open', 'date_actioned' => '2026-06-25',
+                'comments' => 'Under investigation. Billing posts per-member amounts correctly (regression test ShareBillingPerMemberTest proves member A and B are billed only their own shares, not the category total). Both admin and member-portal balances are scoped per customer_id. Symptom likely stems from multiple members sharing a customer record (duplicate customer_no) in legacy data — needs a specific member + billing run to reproduce.',
             ] + $closed,
             [
                 'title' => 'Bulk Member Upload', 'portal_type' => 'chakama',
