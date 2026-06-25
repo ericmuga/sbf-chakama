@@ -50,11 +50,14 @@ class IssueForm
                             ->label('Resource')
                             ->maxLength(255),
                         DatePicker::make('date_assigned'),
+                        DatePicker::make('date_actioned')
+                            ->label('Date Actioned'),
                         Select::make('status')
                             ->options(IssueStatus::class)
                             ->default('open')
                             ->required(),
-                        DatePicker::make('closure_date'),
+                        DatePicker::make('closure_date')
+                            ->label('Date Closed'),
                         DatePicker::make('reviewed_date'),
                         TextInput::make('qa_test_result')
                             ->label('QA Test Result')

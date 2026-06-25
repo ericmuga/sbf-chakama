@@ -13,8 +13,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'title', 'portal_type', 'details', 'issue_owner', 'category', 'resource',
-    'date_assigned', 'status', 'closure_date', 'comments', 'reviewed_date',
-    'qa_test_result', 'release_id',
+    'date_assigned', 'date_actioned', 'status', 'closure_date', 'comments',
+    'reviewed_date', 'qa_test_result', 'release_id',
 ])]
 class Issue extends Model
 {
@@ -30,6 +30,7 @@ class Issue extends Model
             'category' => IssueCategory::class,
             'status' => IssueStatus::class,
             'date_assigned' => 'date',
+            'date_actioned' => 'date',
             'closure_date' => 'date',
             'reviewed_date' => 'date',
         ];

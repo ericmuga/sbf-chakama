@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\FinanceListExportController;
+use App\Http\Controllers\IssueController;
 use App\Http\Controllers\MemberStatementController;
 use App\Http\Controllers\TemplateController;
 use App\Livewire\Members\MemberCard;
@@ -32,6 +33,11 @@ Route::middleware(['auth'])->prefix('admin/templates')->name('admin.templates.')
     Route::get('members', [TemplateController::class, 'members'])->name('members');
     Route::get('dependants', [TemplateController::class, 'dependants'])->name('dependants');
     Route::get('next-of-kin', [TemplateController::class, 'nextOfKin'])->name('next-of-kin');
+    Route::get('issues', [IssueController::class, 'template'])->name('issues');
+});
+
+Route::middleware(['auth'])->prefix('admin/issues')->name('admin.issues.')->group(function () {
+    Route::get('export', [IssueController::class, 'export'])->name('export');
 });
 
 require __DIR__.'/settings.php';

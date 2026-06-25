@@ -8,7 +8,7 @@ use Filament\Support\Contracts\HasLabel;
 enum IssueStatus: string implements HasColor, HasLabel
 {
     case Open = 'open';
-    case PendingTesting = 'pending_testing';
+    case PendingQaReview = 'pending_testing';
     case PendingRework = 'pending_rework';
     case ReworkedPendingTesting = 'reworked_pending_testing';
     case Closed = 'closed';
@@ -17,7 +17,7 @@ enum IssueStatus: string implements HasColor, HasLabel
     {
         return match ($this) {
             self::Open => 'Open',
-            self::PendingTesting => 'Pending Testing',
+            self::PendingQaReview => 'Pending QA Review',
             self::PendingRework => 'Pending Rework',
             self::ReworkedPendingTesting => 'Reworked — Pending Testing',
             self::Closed => 'Closed',
@@ -28,7 +28,7 @@ enum IssueStatus: string implements HasColor, HasLabel
     {
         return match ($this) {
             self::Open => 'danger',
-            self::PendingTesting => 'warning',
+            self::PendingQaReview => 'info',
             self::PendingRework => 'warning',
             self::ReworkedPendingTesting => 'info',
             self::Closed => 'success',

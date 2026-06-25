@@ -63,17 +63,20 @@ class IssueSeeder extends Seeder
             [
                 'title' => 'Posted Sales Invoice', 'portal_type' => 'sbf',
                 'details' => 'Disable deletion of a posted sales invoice; upon multi-selection',
-                'date_assigned' => '2026-06-14', 'status' => 'open',
+                'date_assigned' => '2026-06-14', 'status' => 'pending_testing',
+                'comments' => 'Guard added in SalesHeadersTable bulk delete; posted documents cannot be deleted. Covered by tests.',
             ] + $closed,
             [
                 'title' => 'Posted Sales Invoice', 'portal_type' => 'sbf',
                 'details' => 'Introduce the sales amount on the Posted Sales Invoice Page',
-                'date_assigned' => '2026-06-14', 'status' => 'open',
+                'date_assigned' => '2026-06-14', 'status' => 'pending_testing',
+                'comments' => 'Amount column (sum of sales lines) added to the sales documents table.',
             ] + $closed,
             [
                 'title' => 'Sales Credit Memo', 'portal_type' => 'sbf',
                 'details' => 'Amt should post as -ve in the member ledger; currently goes in as +ve resulting to debit increase',
-                'date_assigned' => '2026-06-14', 'status' => 'open',
+                'date_assigned' => '2026-06-14', 'status' => 'pending_testing',
+                'comments' => 'Credit memos now post a negative customer ledger amount. Covered by SalesPostingServiceTest.',
             ] + $closed,
             [
                 'title' => 'Share allocations', 'portal_type' => 'chakama',
@@ -83,12 +86,14 @@ class IssueSeeder extends Seeder
             [
                 'title' => 'Bulk Member Upload', 'portal_type' => 'chakama',
                 'details' => "Remove the Member No, Cust & Vend No field on from the member reg template' system to assign automatically",
-                'date_assigned' => '2026-06-23', 'status' => 'open',
+                'date_assigned' => '2026-06-23', 'status' => 'pending_testing',
+                'comments' => 'Removed from template and import; member/customer/vendor numbers auto-assigned from number series.',
             ] + $closed,
             [
                 'title' => 'Bulk Member Upload', 'portal_type' => 'chakama',
                 'details' => 'Problem with the Template_Date Field; encountering error while submitting',
-                'date_assigned' => '2026-06-23', 'status' => 'open',
+                'date_assigned' => '2026-06-23', 'status' => 'pending_testing',
+                'comments' => 'Flexible date parsing added (supports d/m/Y and others). Covered by MemberUploadManagementTest.',
             ] + $closed,
         ];
     }

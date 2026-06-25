@@ -12,6 +12,7 @@ use App\Filament\Resources\Releases\ReleaseResource;
 use App\Models\Issue;
 use App\Models\Release;
 use App\Models\User;
+use App\Services\IssueImportService;
 use Database\Seeders\IssueSeeder;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -111,7 +112,8 @@ class IssueTrackerTest extends TestCase
 
         $this->assertSame(12, Issue::count());
         $this->assertSame(6, Issue::where('status', IssueStatus::Closed)->count());
-        $this->assertSame(6, Issue::where('status', IssueStatus::Open)->count());
+        $this->assertSame(5, Issue::where('status', IssueStatus::PendingQaReview)->count());
+        $this->assertSame(1, Issue::where('status', IssueStatus::Open)->count());
         $this->assertDatabaseHas('app_issues', [
             'title' => 'Share allocations',
             'portal_type' => 'chakama',
@@ -125,5 +127,52 @@ class IssueTrackerTest extends TestCase
         (new IssueSeeder)->run();
 
         $this->assertSame(12, Issue::count());
+    }
+
+    public function test_issues_can_be_exported_as_csv(): void
+    {
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
+        Issue::factory()->create(['title' => 'Exportable Issue']);
+
+        $response = $this->get(route('admin.issues.export'));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
+        $this->assertStringContainsString('Exportable Issue', $response->streamedContent());
+        $this->assertStringContainsString('date_actioned', $response->streamedContent());
+    }
+
+    public function test_issues_can_be_imported_from_csv(): void
+    {
+        $csv = "title,portal,type,details,status,date_actioned\n"
+            ."Imported Bug,chakama,functional,Something broke,open,15/06/2026\n";
+
+        $handle = fopen('php://temp', 'r+');
+        fwrite($handle, $csv);
+        rewind($handle);
+
+        $result = app(IssueImportService::class)->importFromHandle($handle);
+        fclose($handle);
+
+        $this->assertSame(1, $result['imported']);
+        $issue = Issue::where('title', 'Imported Bug')->first();
+        $this->assertNotNull($issue);
+        $this->assertSame('chakama', $issue->portal_type->value);
+        $this->assertSame('2026-06-15', $issue->date_actioned->format('Y-m-d'));
+    }
+
+    public function test_importing_updates_existing_issue_without_duplicating(): void
+    {
+        $csv = "title,details,status\nDup Issue,Same details,open\n";
+
+        foreach (range(1, 2) as $_) {
+            $handle = fopen('php://temp', 'r+');
+            fwrite($handle, $csv);
+            rewind($handle);
+            app(IssueImportService::class)->importFromHandle($handle);
+            fclose($handle);
+        }
+
+        $this->assertSame(1, Issue::where('title', 'Dup Issue')->count());
     }
 }
