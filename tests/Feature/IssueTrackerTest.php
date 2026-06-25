@@ -12,10 +12,13 @@ use App\Filament\Resources\Releases\ReleaseResource;
 use App\Models\Issue;
 use App\Models\Release;
 use App\Models\User;
+use App\Notifications\IssueClosedNotification;
+use App\Notifications\IssueLoggedNotification;
 use App\Services\IssueImportService;
 use Database\Seeders\IssueSeeder;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -159,6 +162,30 @@ class IssueTrackerTest extends TestCase
         $this->assertNotNull($issue);
         $this->assertSame('chakama', $issue->portal_type->value);
         $this->assertSame('2026-06-15', $issue->date_actioned->format('Y-m-d'));
+    }
+
+    public function test_developers_are_notified_when_an_issue_is_logged(): void
+    {
+        Notification::fake();
+
+        $developer = User::factory()->create(['role' => UserRole::Developer]);
+        User::factory()->create(['role' => UserRole::BusinessAnalyst]);
+
+        Issue::factory()->create();
+
+        Notification::assertSentTo($developer, IssueLoggedNotification::class);
+    }
+
+    public function test_business_analysts_are_notified_when_an_issue_is_closed(): void
+    {
+        Notification::fake();
+
+        $ba = User::factory()->create(['role' => UserRole::BusinessAnalyst]);
+        $issue = Issue::factory()->open()->create();
+
+        $issue->update(['status' => IssueStatus::Closed]);
+
+        Notification::assertSentTo($ba, IssueClosedNotification::class);
     }
 
     public function test_importing_updates_existing_issue_without_duplicating(): void
