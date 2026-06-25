@@ -1,4 +1,6 @@
-@php($brandColor = $brandColor ?? \App\Support\Brand::primaryHex())
+@php
+    $brandColor = $brandColor ?? \App\Support\Brand::primaryHex();
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>

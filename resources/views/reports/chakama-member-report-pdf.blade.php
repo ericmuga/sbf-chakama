@@ -1,4 +1,6 @@
-@php($brandColor = $brandColor ?? \App\Support\Brand::primaryHex(\App\Enums\EntityDimension::Chakama))
+@php
+    $brandColor = $brandColor ?? \App\Support\Brand::primaryHex(\App\Enums\EntityDimension::Chakama);
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
