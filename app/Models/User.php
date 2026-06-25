@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\EntityDimension;
+use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -16,7 +17,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'email', 'password', 'is_admin', 'entity'])]
+#[Fillable(['name', 'email', 'password', 'is_admin', 'entity', 'role'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -34,6 +35,7 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'is_admin' => 'boolean',
             'entity' => EntityDimension::class,
+            'role' => UserRole::class,
             'password' => 'hashed',
         ];
     }
@@ -41,6 +43,14 @@ class User extends Authenticatable implements FilamentUser
     public function isAdmin(): bool
     {
         return $this->is_admin;
+    }
+
+    /**
+     * Whether the user may access developer/BA tooling (issue tracker, releases).
+     */
+    public function canAccessDevTools(): bool
+    {
+        return $this->is_admin || in_array($this->role, [UserRole::Developer, UserRole::BusinessAnalyst], true);
     }
 
     public function promoteToAdmin(): void

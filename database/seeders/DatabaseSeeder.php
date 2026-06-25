@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             ClaimsSeeder::class,
             DirectJournalServicesSeeder::class,
             ProjectsDemoSeeder::class,
+            IssueSeeder::class,
         ]);
     }
 }

@@ -32,7 +32,9 @@ use App\Filament\Resources\Finance\VendorLedgerEntries\VendorLedgerEntryResource
 use App\Filament\Resources\Finance\VendorPayments\VendorPaymentResource;
 use App\Filament\Resources\Finance\VendorPostingGroups\VendorPostingGroupResource;
 use App\Filament\Resources\Finance\Vendors\VendorResource;
+use App\Filament\Resources\Issues\IssueResource;
 use App\Filament\Resources\Members\MemberResource;
+use App\Filament\Resources\Releases\ReleaseResource;
 use App\Filament\Resources\UserResource;
 use App\Filament\Widgets\DepositsChart;
 use App\Filament\Widgets\ExpenseBreakdownChart;
@@ -99,6 +101,8 @@ class AdminPanelProvider extends PanelProvider
                 VendorPaymentResource::class,
                 VendorPostingGroupResource::class,
                 VendorResource::class,
+                IssueResource::class,
+                ReleaseResource::class,
             ])
             ->pages([
                 Dashboard::class,
@@ -111,6 +115,7 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Finance — Ledgers'),
                 NavigationGroup::make('Finance — Setup'),
                 NavigationGroup::make('Administration'),
+                NavigationGroup::make('Development'),
             ])
             ->databaseNotifications()
             ->widgets([

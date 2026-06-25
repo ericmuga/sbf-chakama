@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Enums\EntityDimension;
+use App\Enums\UserRole;
 use App\Filament\Resources\UserResource\Pages\CreateUser;
 use App\Filament\Resources\UserResource\Pages\EditUser;
 use App\Filament\Resources\UserResource\Pages\ListUsers;
@@ -63,6 +64,11 @@ class UserResource extends Resource
                             ->placeholder('— SBF (default) —')
                             ->helperText('Controls which admin panel this admin can access. Leave blank for SBF access.')
                             ->visible(fn (Get $get): bool => (bool) $get('is_admin')),
+                        Select::make('role')
+                            ->label('Team role')
+                            ->options(UserRole::class)
+                            ->placeholder('— None —')
+                            ->helperText('Developers and Business Analysts can access the Issue Tracker and Version Releases.'),
                     ])
                     ->columns(2),
                 Toggle::make('has_member_profile')
