@@ -2,9 +2,14 @@
 
 namespace App\Filament\Resources\UserResource\Pages;
 
+use App\Filament\Resources\Finance\Vendors\VendorResource;
+use App\Filament\Resources\Members\MemberResource;
 use App\Filament\Resources\UserResource;
 use App\Models\Member;
+use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Support\Icons\Heroicon;
 
 class EditUser extends EditRecord
 {
@@ -14,6 +19,24 @@ class EditUser extends EditRecord
     protected ?array $pendingMemberData = null;
 
     protected ?int $linkMemberId = null;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('viewMember')
+                ->label('View Member Profile')
+                ->icon(Heroicon::OutlinedUserGroup)
+                ->color('gray')
+                ->visible(fn (User $record): bool => (bool) $record->member)
+                ->url(fn (User $record): string => MemberResource::getUrl('edit', ['record' => $record->member])),
+            Action::make('viewVendor')
+                ->label('View Vendor Record')
+                ->icon(Heroicon::OutlinedBuildingStorefront)
+                ->color('gray')
+                ->visible(fn (User $record): bool => (bool) $record->member?->financeVendor)
+                ->url(fn (User $record): string => VendorResource::getUrl('edit', ['record' => $record->member->financeVendor])),
+        ];
+    }
 
     /**
      * @param  array<string, mixed>  $data
