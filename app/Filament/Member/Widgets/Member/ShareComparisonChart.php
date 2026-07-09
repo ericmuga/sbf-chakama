@@ -47,12 +47,12 @@ class ShareComparisonChart extends ChartWidget
                 [
                     'data' => [$totalPaid, $outstanding],
                     'backgroundColor' => [
-                        'rgba(34, 197, 94, 0.8)',  // green for paid
-                        'rgba(239, 68, 68, 0.8)',   // red for outstanding
+                        'rgba(94, 114, 160, 0.75)',   // muted blue for paid
+                        'rgba(139, 111, 168, 0.75)',  // muted purple for outstanding
                     ],
                     'borderColor' => [
-                        'rgb(22, 163, 74)',
-                        'rgb(220, 38, 38)',
+                        'rgb(71, 89, 133)',
+                        'rgb(109, 82, 136)',
                     ],
                     'borderWidth' => 2,
                 ],

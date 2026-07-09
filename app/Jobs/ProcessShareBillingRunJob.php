@@ -58,7 +58,8 @@ class ProcessShareBillingRunJob implements ShouldQueue
 
         $subscriptionsQuery = ShareSubscription::with('member.financeCustomer')
             ->where('billing_schedule_id', $schedule->id)
-            ->whereNotIn('status', ['cancelled', 'transferred']);
+            ->whereNotIn('status', ['cancelled', 'transferred'])
+            ->whereDoesntHave('invoices', fn ($query) => $query->where('posting_date', $run->billing_date));
 
         if ($run->memberGroup) {
             $subscriptionsQuery->whereIn('member_id', $run->memberGroup->resolveMemberIds());
