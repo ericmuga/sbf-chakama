@@ -97,20 +97,27 @@ class ShareBillingRunDuplicatePreventionTest extends TestCase
         $this->assertSame(1, $this->subscription($member)->invoices()->count());
     }
 
-    public function test_billing_run_skips_subscriptions_already_invoiced_by_another_mechanism_for_the_same_day(): void
+    public function test_billing_run_adopts_subscriptions_already_invoiced_by_another_mechanism_for_the_same_day(): void
     {
         $member = Member::factory()->create(['is_chakama' => true, 'member_status' => 'active']);
         $subscription = $this->subscribe($member, shares: 4);
 
         // Simulate the daily cron generator having already invoiced this subscription today.
-        app(ShareBillingService::class)->generateInvoice($subscription->fresh());
+        $existingInvoice = app(ShareBillingService::class)->generateInvoice($subscription->fresh());
 
         $run = $this->makeRun(User::factory()->create(['is_admin' => true]));
         (new ProcessShareBillingRunJob($run->id))->handle(app(SalesPostingService::class));
 
+        // No double-posting: the ledger still reflects a single 4-share invoice.
         $this->assertSame(4000.0, $this->ledgerBalance($member));
         $this->assertSame(1, $subscription->invoices()->count());
-        $this->assertSame(0, $run->fresh()->member_count);
+
+        // The run reports the member and amount it covers, and adopts the invoice.
+        $fresh = $run->fresh();
+        $this->assertSame(1, $fresh->member_count);
+        $this->assertSame(4000.0, (float) $fresh->total_invoiced);
+        $this->assertSame($run->id, $existingInvoice->fresh()->share_billing_run_id);
+        $this->assertSame(1, $run->invoices()->count());
     }
 
     private function makeRun(User $admin): ShareBillingRun

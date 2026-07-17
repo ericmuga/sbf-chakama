@@ -56,10 +56,12 @@ class ProcessShareBillingRunJob implements ShouldQueue
             $this->ensureSubscriptionsForGroup($run, $schedule);
         }
 
-        $subscriptionsQuery = ShareSubscription::with('member.financeCustomer')
+        $subscriptionsQuery = ShareSubscription::with([
+            'member.financeCustomer',
+            'invoices' => fn ($query) => $query->where('posting_date', $run->billing_date)->with('salesLines'),
+        ])
             ->where('billing_schedule_id', $schedule->id)
-            ->whereNotIn('status', ['cancelled', 'transferred'])
-            ->whereDoesntHave('invoices', fn ($query) => $query->where('posting_date', $run->billing_date));
+            ->whereNotIn('status', ['cancelled', 'transferred']);
 
         if ($run->memberGroup) {
             $subscriptionsQuery->whereIn('member_id', $run->memberGroup->resolveMemberIds());
@@ -77,6 +79,23 @@ class ProcessShareBillingRunJob implements ShouldQueue
 
             if (! $customer) {
                 $errors[] = "Member {$member?->no}: no linked customer record.";
+
+                continue;
+            }
+
+            $existingInvoice = $subscription->invoices->first();
+
+            if ($existingInvoice) {
+                // Already invoiced for this billing date (e.g. by the daily
+                // chakama:generate-invoices cron or a prior run). Don't
+                // double-post; adopt it into this run's summary so the run
+                // reflects the members and amounts it covers.
+                if (! $existingInvoice->share_billing_run_id) {
+                    $existingInvoice->update(['share_billing_run_id' => $run->id]);
+                }
+
+                $totalInvoiced += (float) $existingInvoice->salesLines->sum('line_amount');
+                $memberCount++;
 
                 continue;
             }

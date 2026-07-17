@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Models\Finance\SalesHeader;
+use App\Models\Finance\SalesLine;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class ShareBillingRun extends Model
 {
@@ -55,6 +57,16 @@ class ShareBillingRun extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(SalesHeader::class, 'share_billing_run_id');
+    }
+
+    public function salesLines(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            SalesLine::class,
+            SalesHeader::class,
+            'share_billing_run_id',
+            'sales_header_id',
+        );
     }
 
     public function isProcessable(): bool

@@ -6,6 +6,7 @@ use App\Filament\Resources\Chakama\ShareBillingRuns\Pages\CreateShareBillingRun;
 use App\Filament\Resources\Chakama\ShareBillingRuns\Pages\ListShareBillingRuns;
 use App\Filament\Resources\Chakama\ShareBillingRuns\Pages\ViewShareBillingRun;
 use App\Jobs\ProcessShareBillingRunJob;
+use App\Models\Finance\CustomerLedgerEntry;
 use App\Models\MemberGroup;
 use App\Models\ShareBillingRun;
 use App\Models\ShareBillingSchedule;
@@ -101,6 +102,10 @@ class ShareBillingRunResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query
+                ->withCount('invoices')
+                ->withSum('salesLines', 'line_amount')
+            )
             ->columns([
                 TextColumn::make('title')
                     ->searchable()
@@ -130,14 +135,23 @@ class ShareBillingRunResource extends Resource
                         'failed' => 'danger',
                         default => 'gray',
                     }),
-                TextColumn::make('member_count')
+                TextColumn::make('invoices_count')
                     ->label('Members Billed')
                     ->numeric()
+                    ->sortable()
                     ->alignCenter(),
-                TextColumn::make('total_invoiced')
+                TextColumn::make('sales_lines_sum_line_amount')
                     ->label('Total Invoiced')
                     ->money('KES')
                     ->sortable(),
+                TextColumn::make('outstanding')
+                    ->label('Outstanding')
+                    ->money('KES')
+                    ->state(fn (ShareBillingRun $record): float => (float) CustomerLedgerEntry::query()
+                        ->whereIn('document_no', $record->invoices()->pluck('no'))
+                        ->where('document_type', 'invoice')
+                        ->where('is_open', true)
+                        ->sum('remaining_amount')),
                 TextColumn::make('processed_at')
                     ->label('Processed At')
                     ->dateTime('d M Y H:i')

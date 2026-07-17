@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Chakama\ShareBillingRuns\Pages;
 
 use App\Filament\Resources\Chakama\ShareBillingRuns\ShareBillingRunResource;
 use App\Jobs\ProcessShareBillingRunJob;
+use App\Models\Finance\CustomerLedgerEntry;
 use App\Models\ShareBillingRun;
 use Filament\Actions\Action;
 use Filament\Infolists\Components\IconEntry;
@@ -75,6 +76,14 @@ class ViewShareBillingRun extends ViewRecord
                         TextEntry::make('total_invoiced')
                             ->label('Total Invoiced')
                             ->money('KES'),
+                        TextEntry::make('total_outstanding')
+                            ->label('Total Outstanding')
+                            ->money('KES')
+                            ->state(fn (ShareBillingRun $record): float => (float) CustomerLedgerEntry::query()
+                                ->whereIn('document_no', $record->invoices()->pluck('no'))
+                                ->where('document_type', 'invoice')
+                                ->where('is_open', true)
+                                ->sum('remaining_amount')),
                         TextEntry::make('processed_at')
                             ->label('Processed At')
                             ->dateTime('d M Y H:i')
